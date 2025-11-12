@@ -1227,6 +1227,22 @@
             background-color: var(--primary-hover);
             transform: translateY(-2px);
         }
+
+        .password-footer {
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        .password-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .password-footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 
@@ -1450,9 +1466,24 @@
             </div>
             <div class="settings-section">
                 <h3>その他の設定</h3>
-                <div class="form-group">
+                <div class="form-group" style="position: relative;">
                     <label for="password-setting">パスワード設定</label>
-                    <input type="password" id="password-setting" placeholder="パスワード（任意）">
+                    <input type="password" id="password-setting" placeholder="新しいパスワードを設定（空で保存すると解除）">
+                    <span id="toggle-password-visibility" style="position: absolute; right: 12px; top: 42px; cursor: pointer; width: 24px; height: 24px; color: var(--subtle-text-color);">
+                        <svg class="eye-icon-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                        </svg>
+                        <svg class="eye-icon-closed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
+                            <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L21.73 22 23 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
+                        </svg>
+                    </span>
+                </div>
+                <div class="toggle-switch-group" id="require-password-toggle-group" style="display: none;">
+                    <label for="require-password-on-load">起動時にパスワードを求める</label>
+                    <label class="switch">
+                        <input type="checkbox" id="require-password-on-load">
+                        <span class="slider round"></span>
+                    </label>
                 </div>
                 <div class="form-actions">
                     <button type="button" id="save-settings">保存</button>
@@ -1486,9 +1517,16 @@
                     <input type="password" id="password-input" placeholder=" " required>
                     <label for="password-input">パスワード</label>
                 </div>
+                <div class="form-group" style="text-align: left; margin-bottom: 1.5rem; display: flex; align-items: center;">
+                    <input type="checkbox" id="remember-password" style="width: auto; height: auto; margin-right: 0.5rem;">
+                    <label for="remember-password" style="display: inline; font-weight: normal; margin-bottom: 0;">パスワードを記憶する</label>
+                </div>
                 <p id="password-error" class="password-error-message"></p>
                 <button type="submit" class="password-submit-button">ロック解除</button>
             </form>
+            <div class="password-footer">
+                <a href="#" id="create-new-data-from-lock-screen">パスワードがわからない場合：新規作成</a>
+            </div>
         </div>
     </div>
 
@@ -1513,6 +1551,32 @@
             const passwordForm = document.getElementById('password-form');
             const passwordInput = document.getElementById('password-input');
             const passwordError = document.getElementById('password-error');
+            const createNewDataLink = document.getElementById('create-new-data-from-lock-screen');
+            const rememberPasswordCheckbox = document.getElementById('remember-password');
+
+            createNewDataLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (confirm('パスワードが不明なため、新しいデータを作成します。よろしいですか？\n注意：現在のデータは失われます。')) {
+                    // Clear all stored data to ensure a fresh start
+                    localStorage.removeItem('financialData');
+                    localStorage.removeItem('userName');
+                    localStorage.removeItem('password');
+                    localStorage.removeItem('categories');
+                    localStorage.removeItem('rememberedPassword'); // 記憶されたパスワードも削除
+
+                    // Reset the state in the app
+                    state.financialData = [];
+                    state.userName = '';
+                    state.password = '';
+                    state.categories = loadCategories(); // Load default/empty categories
+
+                    // Hide the password modal
+                    passwordModal.classList.remove('visible');
+
+                    // Show the new data creation modal
+                    showModal(newDataModal);
+                }
+            });
 
             // Edit Modal
             const modal = document.getElementById('modal');
@@ -1576,6 +1640,9 @@
             const cancelCategoriesButton = document.getElementById('cancel-categories-button');
             const autoGetCategoriesButton = document.getElementById('auto-get-categories-button');
             const passwordSettingInput = document.getElementById('password-setting');
+            const requirePasswordToggle = document.getElementById('require-password-on-load');
+            const requirePasswordToggleGroup = document.getElementById('require-password-toggle-group');
+            const togglePasswordVisibility = document.getElementById('toggle-password-visibility');
 
             // --- App State ---
             let state = {
@@ -1585,7 +1652,8 @@
                 editingItem: null, // { yearId, monthId, type, itemId }
                 searchTerm: '',
                 categories: [],
-                password: ''
+                password: '',
+                requirePasswordOnLoad: true
             };
 
             // --- SVG Icons ---
@@ -1595,15 +1663,45 @@
                 delete: '<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>',
             };
 
+            // --- Event Listeners ---
+            if (togglePasswordVisibility) {
+                togglePasswordVisibility.addEventListener('click', function () {
+                    const type = passwordSettingInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordSettingInput.setAttribute('type', type);
+                    
+                    const eyeOpen = this.querySelector('.eye-icon-open');
+                    const eyeClosed = this.querySelector('.eye-icon-closed');
+
+                    if (type === 'password') {
+                        eyeOpen.style.display = 'block';
+                        eyeClosed.style.display = 'none';
+                    } else {
+                        eyeOpen.style.display = 'none';
+                        eyeClosed.style.display = 'block';
+                    }
+                });
+            }
+
             // --- Data Initialization ---
             async function initializeApp() {
                 const storedPassword = localStorage.getItem('password');
-                if (storedPassword && storedPassword.length > 0) {
-                    state.password = storedPassword;
+                const storedRequirePassword = localStorage.getItem('requirePasswordOnLoad');
+                const rememberedPassword = localStorage.getItem('rememberedPassword');
+
+                state.password = storedPassword || '';
+                // If the value is stored as "false", it becomes false. Otherwise, it defaults to true.
+                state.requirePasswordOnLoad = storedRequirePassword !== 'false';
+
+
+                if (state.password && state.requirePasswordOnLoad) {
                     passwordModal.classList.add('visible');
+                    if (rememberedPassword) {
+                        passwordInput.value = rememberedPassword;
+                        rememberPasswordCheckbox.checked = true;
+                    }
                     passwordInput.focus();
                 } else {
-                    // No password, load data immediately
+                    // No password required, load data immediately
                     await loadAndRenderData();
                 }
             }
@@ -1667,7 +1765,20 @@
                     state.financialData = await loadDefaultData();
                 }
 
-                // If we got here, decryption was successful, so hide the password modal
+                // If we got here, decryption was successful
+                if (enteredPassword) {
+                    // Update the main password state
+                    state.password = enteredPassword;
+                    // Handle "Remember Password"
+                    if (rememberPasswordCheckbox.checked) {
+                        localStorage.setItem('rememberedPassword', enteredPassword);
+                    } else {
+                        localStorage.removeItem('rememberedPassword');
+                    }
+                }
+
+
+                // Hide the password modal
                 if (passwordModal.classList.contains('visible')) {
                     passwordModal.style.opacity = '0';
                     setTimeout(() => {
@@ -1725,6 +1836,7 @@
                 localStorage.setItem('financialData', dataToStore);
                 localStorage.setItem('userName', state.userName);
                 localStorage.setItem('password', state.password);
+                localStorage.setItem('requirePasswordOnLoad', state.requirePasswordOnLoad);
                 saveCategories(state.categories);
             };
 
@@ -2484,13 +2596,48 @@
             }
 
             if (settingsButton) {
-                settingsButton.addEventListener('click', () => {
-                    categoryInput.value = state.categories.join('\n');
-                    passwordSettingInput.value = state.password;
-                    showModal(settingsModal);
+            settingsButton.addEventListener('click', () => {
+                // Populate categories
+                categoryInput.value = state.categories.join('\n');
 
+                // Populate password settings
+                passwordSettingInput.value = state.password; // Show current password
+                requirePasswordToggle.checked = state.requirePasswordOnLoad;
 
-                });
+                if (state.password) {
+                    requirePasswordToggleGroup.style.display = 'flex';
+                } else {
+                    requirePasswordToggleGroup.style.display = 'none';
+                }
+
+                showModal(settingsModal);
+            });
+
+            saveSettingsButton.addEventListener('click', () => {
+                const newPassword = passwordSettingInput.value.trim();
+                
+                // Check if the password has actually changed
+                if (newPassword !== state.password) {
+                    state.password = newPassword;
+                     // Sync with remembered password
+                    const rememberedPassword = localStorage.getItem('rememberedPassword');
+                    if (rememberedPassword) {
+                        if (newPassword) {
+                            localStorage.setItem('rememberedPassword', newPassword);
+                        } else {
+                            // Password was removed, so remove the remembered one too
+                            localStorage.removeItem('rememberedPassword');
+                        }
+                    }
+                }
+
+                state.requirePasswordOnLoad = requirePasswordToggle.checked;
+
+                saveState();
+                hideModal(settingsModal);
+                showPopupMessage('設定を保存しました。');
+                rerender(); // Rerender to update UI elements that might depend on settings
+            });
             }
 
             if (settingsCloseButton) {
