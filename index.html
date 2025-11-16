@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="ja">
+<!DOCTYPE htm<html lang="ja">
 
 <head>
     <meta charset="UTF-8">
@@ -53,7 +52,9 @@
             background-color: var(--card-background);
             padding: 1rem 2rem;
             display: flex;
-            justify-content: space-between;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
             align-items: center;
             border-bottom: 1px solid var(--border-color);
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, .075);
@@ -63,11 +64,10 @@
             gap: 1.5rem;
         }
 
-        .header-left {
+        .header-top {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            flex-grow: 1;
+            gap: 1.5rem;
         }
 
         h1 {
@@ -75,8 +75,7 @@
             font-size: 1.75rem;
             margin: 0;
             font-weight: 700;
-            flex-shrink: 1; /* Allow h1 to shrink if needed */
-            min-width: 0; /* Important for flex shrinking with long text */
+            flex-shrink: 0;
         }
 
         #search-box {
@@ -84,8 +83,8 @@
             border: 1px solid var(--border-color);
             border-radius: var(--border-radius);
             font-size: 1rem;
-            width: 100%;
-            max-width: 400px;
+            flex-grow: 1;
+            max-width: 450px;
             transition: box-shadow 0.2s, border-color 0.2s;
         }
 
@@ -99,7 +98,31 @@
             display: flex;
             gap: 0.75rem;
             flex-shrink: 0;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
+            order: 2;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 0.25rem 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) var(--background-color);
+        }
+
+        .header-controls::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .header-controls::-webkit-scrollbar-track {
+            background: var(--background-color);
+        }
+
+        .header-controls::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .header-controls::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
         }
 
         .header-controls button {
@@ -113,6 +136,7 @@
             font-weight: 500;
             white-space: nowrap;
             transition: background-color 0.2s, transform 0.1s;
+            flex-shrink: 0;
         }
 
         .header-controls button:hover {
@@ -121,12 +145,14 @@
         }
 
         #import-json-button,
-        #export-json-button {
+        #export-json-button,
+        #export-excel-button {
             background-color: #17a2b8;
         }
 
         #import-json-button:hover,
-        #export-json-button:hover {
+        #export-json-button:hover,
+        #export-excel-button:hover {
             background-color: #117a8b;
         }
 
@@ -769,10 +795,14 @@
             cursor: pointer;
         }
 
-        .month-checkbox-item label.disabled {
+        .month-checkbox-item.disabled label {
             color: var(--subtle-text-color);
             cursor: not-allowed;
             text-decoration: line-through;
+        }
+
+        .month-checkbox-item.disabled input[type="checkbox"] {
+            cursor: not-allowed;
         }
 
         /* Summary Modal Content */
@@ -1270,70 +1300,80 @@
         }
 
         /* Responsive Header Adjustments */
-        @media (max-width: 1200px) {
-            header {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 0.75rem;
-                gap: 0.75rem;
-            }
-            .header-left {
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-                margin-bottom: 0;
-            }
-            .header-controls {
-                justify-content: flex-start;
-                width: 100%;
-                flex-wrap: wrap;
-                gap: 0.5rem;
-            }
-            .header-controls button {
-                flex: 1;
-                min-width: 100px;
-                padding: 0.5rem;
-                font-size: 0.8rem;
-            }
-            #search-box {
-                width: 100%;
-                max-width: none;
-                font-size: 1rem;
-            }
-        }
-
         @media (max-width: 768px) {
+
             /* Header optimization */
             header {
                 padding: 0.5rem;
                 gap: 0.5rem;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-items: center;
+                justify-content: center;
             }
+
             h1 {
                 font-size: 1.3rem;
                 margin: 0;
+                flex-shrink: 0;
             }
+
             .header-left {
                 gap: 0.35rem;
+                flex-direction: row;
+                align-items: center;
+                width: 100%;
+                order: 1;
+                justify-content: center;
             }
+
             #user-name-display {
                 font-size: 1rem;
                 padding: 0.15rem 0.5rem;
+                flex-shrink: 1;
+                min-width: 50px;
             }
+
             #search-box {
                 padding: 0.5rem 0.75rem;
                 font-size: 1rem;
-                width: 100%;
-                margin-top: 0.35rem;
+                width: auto;
+                flex: 1;
+                min-width: 80px;
+                max-width: 200px;
+                margin-top: 0;
             }
+
             .header-controls {
                 gap: 0.35rem;
+                overflow-x: scroll;
+                overflow-y: hidden;
+                width: 100%;
+                order: 2;
+                justify-content: flex-start;
+                padding: 0.25rem 0;
+                max-width: 100%;
+                -webkit-overflow-scrolling: touch;
             }
+
+            .header-controls::-webkit-scrollbar {
+                height: 6px;
+            }
+
+            .header-controls::-webkit-scrollbar-track {
+                background: var(--background-color);
+            }
+
+            .header-controls::-webkit-scrollbar-thumb {
+                background: var(--border-color);
+                border-radius: 3px;
+            }
+
             .header-controls button {
                 padding: 0.45rem 0.6rem;
                 font-size: 0.75rem;
-                flex: 1;
-                min-width: 70px;
+                flex-shrink: 0;
+                min-width: auto;
             }
 
             /* Main container */
@@ -1349,17 +1389,21 @@
                 padding: 1rem;
                 margin-bottom: 1.5rem;
             }
+
             .total-summary-card h2 {
                 font-size: 1.3rem;
                 margin-bottom: 1rem;
             }
+
             .summary-grid {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 1rem;
             }
+
             .summary-grid-item .label {
                 font-size: 0.8rem;
             }
+
             .summary-grid-item .value {
                 font-size: 1.4rem;
             }
@@ -1369,14 +1413,17 @@
                 margin-bottom: 1.5rem;
                 padding: 0 0.5rem;
             }
+
             .year-header {
                 gap: 0.5rem;
                 margin-bottom: 1rem;
                 padding-bottom: 0.5rem;
             }
+
             .year-title {
                 font-size: 1.4rem;
             }
+
             .year-title-editor {
                 font-size: 1.2rem;
             }
@@ -1384,38 +1431,26 @@
             /* Month grid */
             .months-grid {
                 display: grid;
-                grid-auto-flow: column;
-                grid-auto-columns: calc(100vw - 1.5rem);
-                gap: 0.75rem;
-                overflow-x: auto;
-                overflow-y: hidden;
-                padding: 0.75rem 0.75rem 0.75rem 0.5rem;
-                margin: 0 -0.5rem;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: thin;
-                scrollbar-color: #ccc #f0f0f0;
+                grid-template-columns: 1fr; /* 1列レイアウトに変更 */
+                gap: 1rem;
+                overflow-x: hidden; /* 横スクロールを無効化 */
+                padding: 0;
+                margin: 0;
             }
-            .months-grid::-webkit-scrollbar {
-                height: 6px;
-            }
-            .months-grid::-webkit-scrollbar-track {
-                background: #f0f0f0;
-                border-radius: 3px;
-            }
-            .months-grid::-webkit-scrollbar-thumb {
-                background: #ccc;
-                border-radius: 3px;
-            }
+
             .month-card {
-                width: auto;
-                min-width: calc(100vw - 1.5rem);
+                width: 100%;
+                min-width: 0; /* min-widthをリセット */
                 padding: 1rem;
                 border-top-width: 4px;
-                flex-shrink: 0;
+                flex-shrink: 1;
+                box-sizing: border-box; /* paddingをwidthに含める */
             }
+
             .month-title {
                 font-size: 1.2rem;
             }
+
             .final-balance {
                 font-size: 1.1rem;
                 margin-top: 0.75rem;
@@ -1428,10 +1463,12 @@
                 font-size: 1rem;
                 margin-bottom: 0.5rem;
             }
+
             li {
                 padding: 0.6rem 0.5rem;
                 font-size: 0.9rem;
             }
+
             li span:first-child {
                 padding-right: 0.75rem;
             }
@@ -1447,30 +1484,37 @@
                 padding: 1rem;
                 max-width: 100%;
             }
+
             .modal-header {
                 margin-bottom: 1rem;
                 padding-bottom: 0.75rem;
             }
+
             .modal-header h2 {
                 font-size: 1.3rem;
             }
+
             .form-group {
                 margin-bottom: 1rem;
             }
+
             .form-group label {
                 font-size: 0.95rem;
                 margin-bottom: 0.4rem;
             }
+
             .form-group input,
             .form-group select {
                 padding: 0.65rem 0.75rem;
                 font-size: 1rem;
             }
+
             .form-actions {
                 margin-top: 1.5rem;
                 flex-direction: column-reverse;
                 gap: 0.5rem;
             }
+
             .form-actions button {
                 width: 100%;
                 padding: 0.7rem;
@@ -1483,6 +1527,7 @@
                 grid-template-columns: 1fr;
                 gap: 1.5rem;
             }
+
             .bulk-edit-column h4 {
                 font-size: 1rem;
             }
@@ -1493,14 +1538,17 @@
                 gap: 0.5rem;
                 padding: 0.75rem;
             }
+
             .month-checkbox-item {
                 margin-bottom: 0.4rem;
             }
+
             .month-checkbox-item input[type="checkbox"] {
                 width: 1rem;
                 height: 1rem;
                 margin-right: 0.5rem;
             }
+
             .month-checkbox-item label {
                 font-size: 0.85rem;
             }
@@ -1510,6 +1558,7 @@
                 margin-bottom: 1.5rem;
                 padding-bottom: 1rem;
             }
+
             .settings-section h3 {
                 font-size: 1.2rem;
                 margin-bottom: 1rem;
@@ -1687,29 +1736,28 @@
             }
 
             .months-grid {
-                grid-auto-columns: calc(100vw - 1.2rem);
+                grid-auto-flow: column; /* 横並びにする */
+                grid-auto-columns: 90vw; /* カードの幅を画面幅の90%に */
                 gap: 0.6rem;
-                padding: 0.6rem 0.6rem 0.6rem 0.4rem;
+                overflow-x: auto; /* 横スクロールを有効化 */
+                overflow-y: hidden;
+                padding: 0.6rem;
                 margin: 0 -0.35rem;
-                scrollbar-width: thin;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; /* Hide scrollbar */
             }
+
             .months-grid::-webkit-scrollbar {
-                height: 5px;
-            }
-            .months-grid::-webkit-scrollbar-track {
-                background: #f0f0f0;
-            }
-            .months-grid::-webkit-scrollbar-thumb {
-                background: #bbb;
-                border-radius: 3px;
+                display: none; /* Hide scrollbar */
             }
 
             .month-card {
-                width: auto;
-                min-width: calc(100vw - 1.2rem);
+                width: 100%; /* 親要素(grid-auto-columns)の幅に合わせる */
+                min-width: 0;
                 padding: 0.7rem;
                 border-top-width: 3px;
                 flex-shrink: 0;
+                box-sizing: border-box;
             }
 
             .month-title {
@@ -1873,7 +1921,9 @@
             }
 
             /* Touchable element minimum size */
-            button, input[type="button"], input[type="submit"] {
+            button,
+            input[type="button"],
+            input[type="submit"] {
                 min-height: 44px;
             }
 
@@ -1894,168 +1944,205 @@
         }
 
         /* Responsive Styles */
-@media (max-width: 1200px) {
-    .months-grid {
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 1.5rem;
-    }
-}
+        @media (max-width: 1200px) {
+            .months-grid {
+                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                gap: 1.5rem;
+            }
+        }
 
-@media (max-width: 768px) {
-    header {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 1rem;
-        gap: 1rem;
-    }
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: center; /* 中央揃えに変更 */
+                padding: 1rem;
+                gap: 1rem;
+            }
 
-    .header-left {
-        width: 100%;
-    }
+            .header-top {
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+            }
 
-    #search-box {
-        max-width: 100%;
-    }
+            .header-left {
+                width: 100%;
+                flex-direction: column; /* rowから上書き */
+                align-items: center;
+                gap: 0.5rem;
+            }
 
-    .header-controls {
-        width: 100%;
-        justify-content: flex-start;
-        gap: 0.5rem;
-        flex-wrap: wrap; /* Allow buttons to wrap */
-    }
+            #search-box {
+                max-width: 90%;
+                width: 100%;
+            }
 
-    .header-controls button {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.8rem;
-    }
+            .header-controls {
+                width: 100%;
+                justify-content: flex-start; /* 左寄せに変更 */
+                gap: 0.5rem;
+                flex-wrap: nowrap; /* 折り返さない */
+                overflow-x: auto; /* 横スクロールを許可 */
+                scrollbar-width: none; /* スクロールバーを非表示 (Firefox) */
+            }
 
-    #app-container {
-        margin: 1rem auto;
-        padding: 0 1rem;
-    }
+            .header-controls::-webkit-scrollbar {
+                display: none; /* スクロールバーを非表示 (Chrome, Safari) */
+            }
 
-    .total-summary-card {
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-    }
+            .header-controls button {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.8rem;
+            }
 
-    .summary-grid {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1rem;
-    }
+            #app-container {
+                margin: 1rem auto;
+                padding: 0 1rem;
+                overflow-x: hidden; /* Prevent accidental horizontal scroll */
+            }
 
-    .summary-grid-item .value {
-        font-size: 1.5rem;
-    }
+            .total-summary-card {
+                padding: 1rem;
+                margin-bottom: 1.5rem;
+            }
 
-    .year-title {
-        font-size: 2rem;
-    }
-    
-    .year-title-editor {
-        font-size: 2rem;
-    }
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr); /* Simpler 2-column layout */
+                gap: 1rem;
+            }
 
-    .months-grid {
-        grid-template-columns: 1fr; /* 1カラムにする */
-        gap: 1.5rem; /* カード間の縦の余白 */
-    }
+            .summary-grid-item .value {
+                font-size: 1.4rem;
+            }
 
-    .month-card {
-        padding: 1rem;
-    }
+            .year-title {
+                font-size: 1.8rem;
+            }
 
-    .month-title {
-        font-size: 1.5rem;
-    }
+            .year-title-editor {
+                font-size: 1.8rem;
+            }
 
-    .final-balance {
-        font-size: 1.25rem;
-    }
+            .months-grid {
+                display: grid;
+                grid-auto-flow: column;
+                grid-auto-columns: 85vw; /* Card width */
+                gap: 0.75rem;
+                overflow-x: auto;
+                overflow-y: hidden;
+                padding: 0.75rem;
+                margin: 0 -1rem; /* Adjust margin based on #app-container padding */
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; /* Hide scrollbar but keep it scrollable */
+            }
 
-    .summary-item {
-        font-size: 1rem;
-    }
+            .months-grid::-webkit-scrollbar {
+                display: none; /* Hide scrollbar for Chrome, Safari, and Opera */
+            }
 
-    .modal-content {
-        width: 95%;
-        padding: 1.5rem;
-        margin: 1rem;
-    }
-    
-    .modal-content.wide {
-        width: 95%;
-        max-width: none; /* wideを解除 */
-        margin: 1rem; /* 中央配置を維持しつつ余白確保 */
-    }
+            .month-card {
+                width: 100%;
+                min-width: 0;
+                padding: 1rem;
+                border-top-width: 4px;
+                flex-shrink: 0;
+                box-sizing: border-box;
+            }
 
-    .modal-header h2 {
-        font-size: 1.5rem;
-    }
+            .month-title {
+                font-size: 1.5rem;
+            }
 
-    .form-group label {
-        font-size: 0.9rem;
-    }
+            .final-balance {
+                font-size: 1.25rem;
+            }
 
-    .form-group input, .form-group select {
-        padding: 0.6rem 0.8rem;
-        font-size: 0.9rem;
-    }
+            .summary-item {
+                font-size: 1rem;
+            }
 
-    .form-actions button {
-        padding: 0.6rem 1rem;
-        font-size: 0.9rem;
-    }
+            .modal-content {
+                width: 95%;
+                padding: 1.5rem;
+                margin: 1rem;
+            }
 
-    .summary-tables {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
+            .modal-content.wide {
+                width: 95%;
+                max-width: none;
+                /* wideを解除 */
+                margin: 1rem;
+                /* 中央配置を維持しつつ余白確保 */
+            }
 
-    .bulk-edit-columns {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
+            .modal-header h2 {
+                font-size: 1.5rem;
+            }
 
-    .months-checkbox-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.5rem;
-    }
-}
+            .form-group label {
+                font-size: 0.9rem;
+            }
 
-@media (max-width: 480px) {
-    h1 {
-        font-size: 1.5rem;
-    }
+            .form-group input,
+            .form-group select {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.9rem;
+            }
 
-    .summary-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .total-summary-card h2 {
-        font-size: 1.5rem;
-    }
-    
-    .year-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+            .form-actions button {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
 
-    .modal-content.wide .bulk-edit-columns {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
+            .summary-tables {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
 
-    .modal-content.wide .months-checkbox-grid {
-        grid-template-columns: 1fr;
-    }
-}
+            .bulk-edit-columns {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .months-checkbox-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .total-summary-card h2 {
+                font-size: 1.5rem;
+            }
+
+            .year-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .modal-content.wide .bulk-edit-columns {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .modal-content.wide .months-checkbox-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 
 <body>
     <header>
-        <div class="header-left">
+        <div class="header-top">
             <h1>収支管理アプリ</h1>
             <div id="user-name-container">
                 <h2 id="user-name-display"></h2>
@@ -2066,12 +2153,14 @@
         <div class="header-controls">
             <button id="import-json-button">インポート (JSON)</button>
             <button id="export-json-button">エクスポート (JSON)</button>
+            <button id="export-excel-button">エクスポート (Excel)</button>
             <button id="summary-button">概要を表示</button>
             <button id="category-summary-button">カテゴリ別概要</button>
             <button id="bulk-edit-button">一括編集</button>
             <button id="bulk-add-button">一括追加</button>
             <button id="edit-mode-toggle">編集モード</button>
             <button id="reset-data-button" class="secondary-action">データリセット</button>
+            <button id="new-data-button">新規作成</button>
             <button id="settings-button">設定</button>
         </div>
     </header>
@@ -2100,9 +2189,9 @@
             </form>
         </div>
     </div>
-    
+
     <!-- Modal for Bulk Add -->
-    <div id="bulk-add-modal" class="modal-overlay" style="display: none;">
+        <div id="bulk-add-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content wide">
             <div class="modal-header">
                 <h2 id="bulk-add-modal-title">一括追加</h2>
@@ -2110,7 +2199,7 @@
             </div>
             <div class="bulk-edit-columns">
                 <div class="bulk-edit-column">
-                    <h4>項目詳細</h4>
+                    <h4>追加内容</h4>
                     <div class="form-group">
                         <label>種別</label>
                         <div class="radio-toggle-group">
@@ -2121,17 +2210,13 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="bulk-add-category-select">項目</label> <!-- Changed label -->
-                        <select id="bulk-add-category-select"></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="bulk-add-amount">金額</label>
-                        <input type="number" id="bulk-add-amount" value="0"> <!-- Default value set to 0 -->
+                        <label for="bulk-add-item-select">追加する項目</label>
+                        <select id="bulk-add-item-select"></select>
                     </div>
                 </div>
                 <div class="bulk-edit-column">
-                    <h4>対象月 (複数選択可)</h4>
-                    <div class="month-checkbox-item"> <!-- For Select All -->
+                    <h4>適用する月</h4>
+                    <div class="month-checkbox-item">
                         <input type="checkbox" id="bulk-add-select-all-months">
                         <label for="bulk-add-select-all-months"><strong>すべて選択</strong></label>
                     </div>
@@ -2143,10 +2228,12 @@
             </div>
             <div class="form-actions">
                 <button id="cancel-bulk-add-button" type="button">キャンセル</button>
-                <button id="save-bulk-add-button" type="button">保存</button>
+                <button id="save-bulk-add-button" type="button">追加</button>
             </div>
         </div>
     </div>
+
+
 
     <!-- Modal for Bulk Edit -->
     <div id="bulk-edit-modal" class="modal-overlay" style="display: none;">
@@ -2158,19 +2245,19 @@
             <form id="bulk-edit-form">
                 <div class="bulk-edit-columns">
                     <div class="bulk-edit-column">
-                        <h4>1. 編集対象を選択</h4>
+                        <h4>1. 編集する項目を選択</h4>
                         <div class="form-group">
                             <label for="bulk-edit-select">編集する項目</label>
                             <select id="bulk-edit-select" required></select>
                         </div>
-                        <h4>2. 編集後の内容</h4>
+                        <h4>2. 編集内容</h4>
                         <div class="form-group">
                             <label for="bulk-edit-new-name">新しい項目名</label>
-                            <input type="text" id="bulk-edit-new-name" placeholder="変更しない場合は空">
+                            <input type="text" id="bulk-edit-new-name" placeholder="変更しない場合は空欄のまま">
                         </div>
                         <div class="form-group">
                             <label for="bulk-edit-new-amount">新しい金額</label>
-                            <input type="number" id="bulk-edit-new-amount" placeholder="変更しない場合は空" value="0">
+                            <input type="number" id="bulk-edit-new-amount" placeholder="変更しない場合は空欄のまま" value="0">
                         </div>
                     </div>
                     <div class="bulk-edit-column">
@@ -2186,6 +2273,8 @@
             </form>
         </div>
     </div>
+
+
 
     <!-- Modal for Summary -->
     <div id="summary-modal" class="modal-overlay" style="display: none;">
@@ -2342,12 +2431,17 @@
                 <div class="form-group" style="position: relative;">
                     <label for="password-setting">パスワード設定</label>
                     <input type="password" id="password-setting" placeholder="新しいパスワードを設定（空で保存すると解除）">
-                    <span id="toggle-password-visibility" style="position: absolute; right: 12px; top: 42px; cursor: pointer; width: 24px; height: 24px; color: var(--subtle-text-color);">
-                        <svg class="eye-icon-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 4.5C6 4.5 2.73 7.61 1 12c1.73 4.39 5.27 7.5 11 7.5s9.27-4.48 10-10S17.52 4.5 12 4.5zm-2 14.5v-9l6 4.5-6 4.5z" />
+                    <span id="toggle-password-visibility"
+                        style="position: absolute; right: 12px; top: 42px; cursor: pointer; width: 24px; height: 24px; color: var(--subtle-text-color);">
+                        <svg class="eye-icon-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="currentColor">
+                            <path
+                                d="M12 4.5C6 4.5 2.73 7.61 1 12c1.73 4.39 5.27 7.5 11 7.5s9.27-3.11 11-8.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
                         </svg>
-                        <svg class="eye-icon-closed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
-                            <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.75C21.27 7.61 17.04 4.5 12 4.5c-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L21.73 22 23 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+                        <svg class="eye-icon-closed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="currentColor" style="display: none;">
+                            <path
+                                d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L21.73 22 23 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
                         </svg>
                     </span>
                 </div>
@@ -2389,18 +2483,26 @@
                 <div class="password-input-group">
                     <input type="password" id="password-input" placeholder=" " required>
                     <label for="password-input">パスワード</label>
-                    <span id="toggle-main-password-visibility" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; width: 24px; height: 24px; color: var(--subtle-text-color); z-index: 2;">
-                        <svg class="eye-icon-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 4.5C6 4.5 2.73 7.61 1 12c1.73 4.39 5.27 7.5 11 7.5s9.27-4.11 10-10S17.52 4.5 12 4.5zm0 10.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                    <span id="toggle-main-password-visibility"
+                        style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; width: 24px; height: 24px; color: var(--subtle-text-color); z-index: 2;">
+                        <svg class="eye-icon-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="currentColor">
+                            <path
+                                d="M12 4.5C6 4.5 2.73 7.61 1 12c1.73 4.39 5.27 7.5 11 7.5s9.27-4.11 10-10S17.52 4.5 12 4.5zm0 10.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
                         </svg>
-                        <svg class="eye-icon-closed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="display: none;">
-                            <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.75C21.27 7.61 17.04 4.5 12 4.5c-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L21.73 22 23 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+                        <svg class="eye-icon-closed" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                            fill="currentColor" style="display: none;">
+                            <path
+                                d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.75C21.27 7.61 17.04 4.5 12 4.5c-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L21.73 22 23 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
                         </svg>
                     </span>
                 </div>
-                <div class="form-group" style="text-align: left; margin-bottom: 1.5rem; display: flex; align-items: center;">
-                    <input type="checkbox" id="remember-password" style="width: auto; height: auto; margin-right: 0.5rem;">
-                    <label for="remember-password" style="display: inline; font-weight: normal; margin-bottom: 0;">パスワードを記憶する</label>
+                <div class="form-group"
+                    style="text-align: left; margin-bottom: 1.5rem; display: flex; align-items: center;">
+                    <input type="checkbox" id="remember-password"
+                        style="width: auto; height: auto; margin-right: 0.5rem;">
+                    <label for="remember-password"
+                        style="display: inline; font-weight: normal; margin-bottom: 0;">パスワードを記憶する</label>
                 </div>
                 <p id="password-error" class="password-error-message"></p>
                 <button type="submit" class="password-submit-button">ロック解除</button>
@@ -2415,7 +2517,9 @@
     <div id="smartphone-warning-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><center>警告</center></h2>
+                <h2>
+                    <center>警告</center>
+                </h2>
             </div>
             <p>このサイトはスマートフォン表示に完全には対応していません。PCでの閲覧を推奨します。</p>
             <div class="form-actions">
@@ -2433,6 +2537,13 @@
             const resetDataButton = document.getElementById('reset-data-button');
             const searchBox = document.getElementById('search-box');
             const exportJsonButton = document.getElementById('export-json-button');
+            const exportExcelButton = document.getElementById('export-excel-button');
+            if (exportJsonButton) {
+                exportJsonButton.textContent = 'エクスポート (JSON)';
+            }
+            if (exportExcelButton) {
+                exportExcelButton.textContent = 'エクスポート (Excel)';
+            }
             const importJsonButton = document.getElementById('import-json-button');
             const bulkEditButton = document.getElementById('bulk-edit-button');
             const bulkAddButton = document.getElementById('bulk-add-button');
@@ -2441,84 +2552,155 @@
             const saveBulkAddButton = document.getElementById('save-bulk-add-button');
             const cancelBulkAddButton = document.getElementById('cancel-bulk-add-button');
             const bulkAddCloseButton = bulkAddModal.querySelector('.close-btn');
-            
-            const bulkAddCategorySelect = document.getElementById('bulk-add-category-select');
-            const bulkAddAmount = document.getElementById('bulk-add-amount');
+
+            const bulkAddItemSelect = document.getElementById('bulk-add-item-select');
             const bulkAddMonthsContainer = document.getElementById('bulk-add-months-container');
             const bulkAddTypeIncome = document.getElementById('bulk-add-type-income');
             const bulkAddTypeExpenditure = document.getElementById('bulk-add-type-expenditure');
             const bulkAddSelectAllMonths = document.getElementById('bulk-add-select-all-months');
+            const bulkAddSelectAllLabel = document.querySelector('label[for="bulk-add-select-all-months"] strong');
+            if (bulkAddSelectAllLabel) {
+                bulkAddSelectAllLabel.textContent = 'すべて選択';
+            }
+
+            let bulkAddCandidates = [];
+            const bulkAddCurrencyFormatter = new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' });
+
+            const getSelectedBulkAddItem = () => {
+                if (!bulkAddItemSelect) return null;
+                return bulkAddCandidates.find(candidate => candidate.value === bulkAddItemSelect.value) || null;
+            };
+
+            const populateBulkAddItemOptions = () => {
+                if (!bulkAddItemSelect) return;
+                const type = bulkAddTypeIncome.checked ? 'income' : 'expenditure';
+                bulkAddItemSelect.innerHTML = '';
+
+                const placeholderOption = document.createElement('option');
+                placeholderOption.value = '';
+                placeholderOption.textContent = '追加する項目を選択';
+                placeholderOption.disabled = true;
+                placeholderOption.selected = true;
+                bulkAddItemSelect.appendChild(placeholderOption);
+
+                const filteredCandidates = bulkAddCandidates.filter(candidate => candidate.type === type);
+                const hasCandidates = filteredCandidates.length > 0;
+                bulkAddItemSelect.disabled = !hasCandidates;
+
+                if (filteredCandidates.length === 0) {
+                    const emptyOption = document.createElement('option');
+                    emptyOption.value = '';
+                    emptyOption.disabled = true;
+                    emptyOption.textContent = type === 'income' ? '追加できる収入項目がありません' : '追加できる支出項目がありません';
+                    bulkAddItemSelect.appendChild(emptyOption);
+                    return;
+                }
+
+                filteredCandidates.forEach(candidate => {
+                    const option = document.createElement('option');
+                    option.value = candidate.value;
+                    option.textContent = `${candidate.yearLabel} ${candidate.monthLabel} - ${candidate.name} (${bulkAddCurrencyFormatter.format(candidate.amount)})`;
+                    bulkAddItemSelect.appendChild(option);
+                });
+            };
 
             const updateMonthCheckboxes = () => {
+                if (!bulkAddMonthsContainer) return;
                 const type = bulkAddTypeIncome.checked ? 'income' : 'expenditure';
-                const category = bulkAddCategorySelect.value;
-
-                if (!category) return;
+                const selectedItem = getSelectedBulkAddItem();
 
                 let allEnabledAreChecked = true;
                 let hasEnabledCheckboxes = false;
 
+                const checkboxes = bulkAddMonthsContainer.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    const label = checkbox.nextElementSibling;
+
+                    if (!selectedItem || selectedItem.type !== type) {
+                        checkbox.checked = false;
+                        checkbox.disabled = true;
+                        if (label) label.classList.add('disabled');
+                        return;
+                    }
+
+                    const [yearId, monthId] = checkbox.value.split('|');
+                    const monthData = findMonth(yearId, monthId);
+                    const itemExists = !monthData || monthData[type].some(item => item.name === selectedItem.name);
+
+                    checkbox.disabled = itemExists;
+                    if (itemExists) {
+                        checkbox.checked = false;
+                        if (label) label.classList.add('disabled');
+                    } else {
+                        hasEnabledCheckboxes = true;
+                        checkbox.checked = true;
+                        if (label) label.classList.remove('disabled');
+                    }
+
+                    if (!checkbox.disabled && !checkbox.checked) {
+                        allEnabledAreChecked = false;
+                    }
+                });
+
+                bulkAddSelectAllMonths.disabled = !hasEnabledCheckboxes;
+                if (!hasEnabledCheckboxes) {
+                    bulkAddSelectAllMonths.checked = false;
+                } else {
+                    bulkAddSelectAllMonths.checked = hasEnabledCheckboxes && allEnabledAreChecked;
+                }
+                saveBulkAddButton.disabled = !selectedItem || !hasEnabledCheckboxes;
+            };
+
+            const buildBulkAddCandidates = () => {
+                const byKey = new Map(); // key: `${type}|${name}`
                 state.financialData.forEach(yearData => {
                     yearData.months.forEach(monthData => {
-                        const monthId = `${yearData.year}-${monthData.month}`;
-                        const checkbox = document.getElementById(`month-checkbox-${monthId}`);
-                        if (!checkbox) return;
-
-                        const itemExists = monthData[type].some(item => item.category === category);
-                        
-                        checkbox.disabled = itemExists;
-                        checkbox.checked = !itemExists; 
-                        
-                        const label = checkbox.nextElementSibling;
-                        if (label) {
-                            label.classList.toggle('disabled', itemExists);
-                        }
-
-                        if (!itemExists) {
-                            hasEnabledCheckboxes = true;
-                        }
-                        if (!itemExists && !checkbox.checked) {
-                            allEnabledAreChecked = false;
-                        }
+                        ['income', 'expenditure'].forEach(type => {
+                            monthData[type].forEach(item => {
+                                const key = `${type}|${item.name}`;
+                                if (byKey.has(key)) return;
+                                byKey.set(key, {
+                                    value: key,
+                                    type,
+                                    name: item.name,
+                                    amount: Number(item.amount) || 0,
+                                    yearLabel: yearData.year,
+                                    monthLabel: monthData.month,
+                                    data: { ...item }
+                                });
+                            });
+                        });
                     });
                 });
-                
-                bulkAddSelectAllMonths.checked = hasEnabledCheckboxes && allEnabledAreChecked;
+                return Array.from(byKey.values()).sort((a, b) => a.name.localeCompare(b.name, 'ja'));
             };
 
             const populateBulkAddModal = () => {
-                bulkAddCategorySelect.innerHTML = '';
-                state.categories.forEach(category => {
-                    const option = document.createElement('option');
-                    option.value = category;
-                    option.textContent = category;
-                    bulkAddCategorySelect.appendChild(option);
-                });
-
+                if (!bulkAddMonthsContainer) return;
                 bulkAddMonthsContainer.innerHTML = '';
                 state.financialData.forEach(yearData => {
                     const yearGroup = document.createElement('div');
                     yearGroup.className = 'month-checkbox-group';
-                    
+
                     const yearTitle = document.createElement('strong');
                     yearTitle.className = 'month-checkbox-group-title';
-                    yearTitle.textContent = `${yearData.year}年`;
+                    yearTitle.textContent = yearData.year;
                     yearGroup.appendChild(yearTitle);
 
                     yearData.months.forEach(monthData => {
-                        const monthId = `${yearData.year}-${monthData.month}`;
+                        const monthId = `${yearData.id}|${monthData.id}`;
                         const item = document.createElement('div');
                         item.className = 'month-checkbox-item';
-                        
+
                         const checkbox = document.createElement('input');
                         checkbox.type = 'checkbox';
                         checkbox.id = `month-checkbox-${monthId}`;
                         checkbox.value = monthId;
-                        
+
                         const label = document.createElement('label');
                         label.htmlFor = `month-checkbox-${monthId}`;
                         label.textContent = `${monthData.month}月`;
-                        
+
                         item.appendChild(checkbox);
                         item.appendChild(label);
                         yearGroup.appendChild(item);
@@ -2526,12 +2708,22 @@
                     bulkAddMonthsContainer.appendChild(yearGroup);
                 });
 
+                bulkAddCandidates = buildBulkAddCandidates();
+                populateBulkAddItemOptions();
                 updateMonthCheckboxes();
             };
 
-            bulkAddTypeIncome.addEventListener('change', updateMonthCheckboxes);
-            bulkAddTypeExpenditure.addEventListener('change', updateMonthCheckboxes);
-            bulkAddCategorySelect.addEventListener('change', updateMonthCheckboxes);
+            bulkAddTypeIncome.addEventListener('change', () => {
+                populateBulkAddItemOptions();
+                updateMonthCheckboxes();
+            });
+            bulkAddTypeExpenditure.addEventListener('change', () => {
+                populateBulkAddItemOptions();
+                updateMonthCheckboxes();
+            });
+            if (bulkAddItemSelect) {
+                bulkAddItemSelect.addEventListener('change', updateMonthCheckboxes);
+            }
 
             bulkAddSelectAllMonths.addEventListener('change', (e) => {
                 const isChecked = e.target.checked;
@@ -2552,51 +2744,40 @@
             bulkAddCloseButton.addEventListener('click', () => hideModal(bulkAddModal));
 
             saveBulkAddButton.addEventListener('click', () => {
-                const type = bulkAddTypeIncome.checked ? 'income' : 'expenditure';
-                const category = bulkAddCategorySelect.value;
-                const amount = parseInt(bulkAddAmount.value, 10);
+                const selectedItem = getSelectedBulkAddItem();
+                if (!selectedItem) {
+                    showPopupMessage('追加する項目を選択してください。');
+                    return;
+                }
 
                 const selectedMonthsCheckboxes = bulkAddMonthsContainer.querySelectorAll('input[type="checkbox"]:checked:not(:disabled)');
-                
-                if (!category) {
-                    showPopupMessage('項目を選択してください。');
-                    return;
-                }
-                if (isNaN(amount)) {
-                    showPopupMessage('有効な金額を入力してください。');
-                    return;
-                }
+
                 if (selectedMonthsCheckboxes.length === 0) {
-                    showPopupMessage('少なくとも1つの対象月を選択してください。');
+                    showPopupMessage('最低でも1つの対象月を選択してください。');
                     return;
                 }
 
                 let addedCount = 0;
                 selectedMonthsCheckboxes.forEach(checkbox => {
-                    const [year, month] = checkbox.value.split('-').map(Number);
-                    
-                    const yearData = state.financialData.find(y => y.year === year);
-                    if (!yearData) return;
-
-                    const monthData = yearData.months.find(m => m.month === month);
+                    const [yearId, monthId] = checkbox.value.split('|');
+                    const monthData = findMonth(yearId, monthId);
                     if (!monthData) return;
 
-                    const date = new Date(year, month - 1, 1);
+                    const duplicate = monthData[selectedItem.type].some(item => item.name === selectedItem.name);
+                    if (duplicate) return;
 
                     const newItem = {
-                        id: Date.now() + Math.random(),
-                        date: date.toISOString(),
-                        name: category,
-                        amount: amount,
-                        category: category
+                        ...selectedItem.data,
+                        id: `item_${Date.now()}_${Math.random()}`
                     };
-                    monthData[type].push(newItem);
+                    newItem.amount = Number(newItem.amount) || 0;
+                    monthData[selectedItem.type].push(newItem);
                     addedCount++;
                 });
 
                 if (addedCount > 0) {
-                    saveData();
-                    showPopupMessage(`${addedCount}つの月に「${category}」を追加しました。`);
+                    rerender();
+                    showPopupMessage(`${addedCount}件の月に「${selectedItem.name}」を追加しました。`);
                     hideModal(bulkAddModal);
                 } else {
                     showPopupMessage('追加できる月がありませんでした。');
@@ -2736,7 +2917,7 @@
                 toggleMainPasswordVisibility.addEventListener('click', function () {
                     const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                     passwordInput.setAttribute('type', type);
-                    
+
                     const eyeOpen = this.querySelector('.eye-icon-open');
                     const eyeClosed = this.querySelector('.eye-icon-closed');
 
@@ -2753,16 +2934,16 @@
                 togglePasswordVisibility.addEventListener('click', function () {
                     const type = passwordSettingInput.getAttribute('type') === 'password' ? 'text' : 'password';
                     passwordSettingInput.setAttribute('type', type);
-                    
+
                     const eyeOpen = this.querySelector('.eye-icon-open');
                     const eyeClosed = this.querySelector('.eye-icon-closed');
 
-                    if (type === 'password') {
-                        eyeOpen.style.display = 'block';
-                        eyeClosed.style.display = 'none';
-                    } else {
+                    if (type === 'text') {
                         eyeOpen.style.display = 'none';
                         eyeClosed.style.display = 'block';
+                    } else {
+                        eyeOpen.style.display = 'block';
+                        eyeClosed.style.display = 'none';
                     }
                 });
             }
@@ -3274,9 +3455,29 @@
                 showModal(categorySummaryModal);
             };
 
-            const ENCRYPTION_KEY = "YourSecretKey"; // 古いデータとの互換性のために残す
+            const ENCRYPTION_KEY = "YourSecretKey"; // �Â��f�[�^�Ƃ̌݊種別�̂��߂Ɏc��
+            const EXCELJS_CDN_URL = "https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js";
+            let excelJsLoadPromise = null;
 
-            const exportToJson = () => {
+            const ensureExcelJsLoaded = () => {
+                if (window.ExcelJS) return Promise.resolve(window.ExcelJS);
+                if (excelJsLoadPromise) return excelJsLoadPromise;
+
+                excelJsLoadPromise = new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = EXCELJS_CDN_URL;
+                    script.async = true;
+                    script.onload = () => resolve(window.ExcelJS);
+                    script.onerror = () => {
+                        excelJsLoadPromise = null;
+                        reject(new Error('failed to load ExcelJS'));
+                    };
+                    document.head.appendChild(script);
+                });
+
+                return excelJsLoadPromise;
+            };
+const exportToJson = () => {
                 const dataToExport = {
                     userName: state.userName,
                     financialData: state.financialData
@@ -3289,13 +3490,13 @@
                         isPasswordProtected: true,
                         data: encryptedData
                     };
-                    showPopupMessage('データはパスワードで暗号化されてエクスポートされました。');
+                    showPopupMessage('データはパスワードで暗号化してエクスポートしました。');
                 } else {
                     exportObject = {
                         isPasswordProtected: false,
                         data: dataToExport
                     };
-                    showPopupMessage('データは暗号化されずにエクスポートされました。');
+                    showPopupMessage('データは暗号化せずにエクスポートしました。');
                 }
 
                 const outputData = JSON.stringify(exportObject, null, 2);
@@ -3307,6 +3508,175 @@
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            };
+
+            const exportToExcel = async () => {
+                if (!state.financialData.length) {
+                    showPopupMessage('エクスポートできるデータがありません。');
+                    return;
+                }
+
+                let ExcelJS;
+                try {
+                    ExcelJS = await ensureExcelJsLoaded();
+                } catch (err) {
+                    console.error(err);
+                    showPopupMessage('Excelライブラリの読み込みに失敗しました。インターネット接続を確認してもう一度お試しください。');
+                    return;
+                }
+
+                if (!ExcelJS) {
+                    showPopupMessage('Excelライブラリを初期化できなかったためエクスポートできません。');
+                    return;
+                }
+
+                calculateAllBalances();
+
+                const workbook = new ExcelJS.Workbook();
+                const worksheet = workbook.addWorksheet('収支リスト', {
+                    views: [{ showGridLines: false }]
+                });
+
+                worksheet.columns = [
+                    { width: 4 }, { width: 4 }, { width: 12 },
+                    { width: 25 }, { width: 14 },
+                    { width: 25 }, { width: 14 },
+                    { width: 16 }, { width: 16 }, { width: 10 }, { width: 20 }
+                ];
+
+                const applyBorder = (cell, variant = 'thin') => {
+                    cell.border = ['top', 'left', 'bottom', 'right'].reduce((border, side) => {
+                        border[side] = { style: variant, color: { argb: 'FFB0B0B0' } };
+                        return border;
+                    }, {});
+                };
+
+                const workbookTitle = state.userName ? `${state.userName}` : 'HH年間支収表 (参考デザイン)';
+                const titleRow = worksheet.addRow(['', '', '', workbookTitle, '', '', '', '', '', '', '']);
+                worksheet.mergeCells(`D${titleRow.number}:K${titleRow.number}`);
+                titleRow.font = { bold: true, size: 16, color: { argb: 'FF1F4E78' } };
+                titleRow.alignment = { horizontal: 'center' };
+                worksheet.addRow([]);
+
+                const toNumber = (value) => {
+                    const num = Number(value);
+                    return Number.isFinite(num) ? num : 0;
+                };
+
+                let grandTotalIncome = 0;
+                let grandTotalExpenditure = 0;
+
+                state.financialData.forEach(year => {
+                    worksheet.addRow([]);
+                    const yearRow = worksheet.addRow(['', '', `${year.year}`]);
+                    worksheet.mergeCells(`C${yearRow.number}:K${yearRow.number}`);
+                    yearRow.font = { bold: true, size: 13 };
+                    yearRow.alignment = { horizontal: 'left' };
+                    worksheet.addRow([]);
+
+                    const headerRow = worksheet.addRow(['', '', '月', '収入', '金額', '支出', '金額', '月次収支', '当月残額', '', '備考']);
+                    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDAEEF3' } };
+                    headerRow.font = { bold: true };
+                    headerRow.alignment = { horizontal: 'center' };
+                    headerRow.eachCell(cell => applyBorder(cell, 'medium'));
+
+                    year.months.forEach(month => {
+                        const incomeItems = month.income.length ? month.income : [{ name: 'ー', amount: 0 }];
+                        const expenditureItems = month.expenditure.length ? month.expenditure : [{ name: 'ー', amount: 0 }];
+                        const rowCount = Math.max(incomeItems.length, expenditureItems.length);
+                        const monthIncomeTotal = toNumber(month.totalIncome || 0);
+                        const monthExpenditureTotal = toNumber(month.totalExpenditure || 0);
+                        const monthlyNet = toNumber(monthIncomeTotal - monthExpenditureTotal);
+                        const monthFinalBalance = toNumber(month.finalBalance || 0);
+                        grandTotalIncome += monthIncomeTotal;
+                        grandTotalExpenditure += monthExpenditureTotal;
+
+                        for (let i = 0; i < rowCount; i++) {
+                            const incomeItem = incomeItems[i] || {};
+                            const expenditureItem = expenditureItems[i] || {};
+                            const row = worksheet.addRow([
+                                '',
+                                '',
+                                i === 0 ? (month.month || '') : '',
+                                incomeItem.name || '',
+                                toNumber(incomeItem.amount),
+                                expenditureItem.name || '',
+                                toNumber(expenditureItem.amount),
+                                i === 0 ? monthlyNet : '',
+                                i === 0 ? monthFinalBalance : '',
+                                '',
+                                ''
+                            ]);
+
+                            row.getCell(3).alignment = { vertical: 'middle' };
+                            [5, 7, 8, 9].forEach(idx => {
+                                const cell = row.getCell(idx);
+                                cell.numFmt = '"¥"#,##0';
+                                cell.alignment = { horizontal: 'right' };
+                            });
+                            row.getCell(4).alignment = { horizontal: 'left' };
+                            row.getCell(6).alignment = { horizontal: 'left' };
+                            row.eachCell(cell => applyBorder(cell));
+                        }
+
+                        const totalRow = worksheet.addRow([
+                            '',
+                            '',
+                            '',
+                            '合計',
+                            monthIncomeTotal,
+                            '合計',
+                            monthExpenditureTotal,
+                            monthlyNet,
+                            monthFinalBalance,
+                            '',
+                            ''
+                        ]);
+                        totalRow.font = { bold: true };
+                        [5, 7, 8, 9].forEach(idx => {
+                            const cell = totalRow.getCell(idx);
+                            cell.numFmt = '"¥"#,##0';
+                            cell.alignment = { horizontal: 'right' };
+                        });
+                        totalRow.eachCell(cell => applyBorder(cell, 'medium'));
+                        worksheet.addRow([]);
+                    });
+                });
+
+                const summaryRow = worksheet.addRow([
+                    '',
+                    '',
+                    '',
+                    '\u7dcf\u53ce\u5165\u5408\u8a08',
+                    grandTotalIncome,
+                    '\u7dcf\u652f\u51fa\u5408\u8a08',
+                    grandTotalExpenditure,
+                    toNumber(grandTotalIncome - grandTotalExpenditure),
+                    '',
+                    '',
+                    ''
+                ]);
+                summaryRow.font = { bold: true, size: 12 };
+                [5, 7, 8].forEach(idx => {
+                    const cell = summaryRow.getCell(idx);
+                    cell.numFmt = '"¥"#,##0';
+                    cell.alignment = { horizontal: 'right' };
+                });
+                summaryRow.eachCell(cell => applyBorder(cell, 'medium'));
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `financial_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                showPopupMessage('Excelファイルをエクスポートしました。');
             };
 
             const importData = (data) => {
@@ -3679,20 +4049,21 @@
             }
 
             if (resetDataButton) {
-                resetDataButton.addEventListener('click', async () => {
-                    if (confirm('本当にすべてのデータをリセットしますか？この操作は元に戻せません。')) {
-                        localStorage.removeItem('financialData');
-                        localStorage.removeItem('userName');
-                        localStorage.removeItem('password');
-                        state.userName = '';
-                        state.password = '';
-                        userNameDisplay.textContent = '';
+                resetDataButton.addEventListener("click", async () => {
+                    if (confirm("現在のすべてのデータをリセットしますか？この操作は元に戻せません。")) {
+                        localStorage.removeItem("financialData");
+                        localStorage.removeItem("userName");
+                        localStorage.removeItem("password");
+                        state.userName = "";
+                        state.password = "";
+                        userNameDisplay.textContent = "";
                         state.financialData = await loadDefaultData();
-                        showPopupMessage('データが正常にリセットされました。');
+                        showPopupMessage("データを初期状態にリセットしました。");
                         rerender();
                     }
                 });
             }
+
 
             if (summaryButton) {
                 summaryButton.addEventListener('click', renderSummaryModal);
@@ -3717,48 +4088,48 @@
             }
 
             if (settingsButton) {
-            settingsButton.addEventListener('click', () => {
-                // Populate categories
-                categoryInput.value = state.categories.join('\n');
+                settingsButton.addEventListener('click', () => {
+                    // Populate categories
+                    categoryInput.value = state.categories.join('\n');
 
-                // Populate password settings
-                passwordSettingInput.value = state.password; // Show current password
-                requirePasswordToggle.checked = state.requirePasswordOnLoad;
+                    // Populate password settings
+                    passwordSettingInput.value = state.password; // Show current password
+                    requirePasswordToggle.checked = state.requirePasswordOnLoad;
 
-                if (state.password) {
-                    requirePasswordToggleGroup.style.display = 'flex';
-                } else {
-                    requirePasswordToggleGroup.style.display = 'none';
-                }
+                    if (state.password) {
+                        requirePasswordToggleGroup.style.display = 'flex';
+                    } else {
+                        requirePasswordToggleGroup.style.display = 'none';
+                    }
 
-                showModal(settingsModal);
-            });
+                    showModal(settingsModal);
+                });
 
-            saveSettingsButton.addEventListener('click', () => {
-                const newPassword = passwordSettingInput.value.trim();
-                
-                // Check if the password has actually changed
-                if (newPassword !== state.password) {
-                    state.password = newPassword;
-                     // Sync with remembered password
-                    const rememberedPassword = localStorage.getItem('rememberedPassword');
-                    if (rememberedPassword) {
-                        if (newPassword) {
-                            localStorage.setItem('rememberedPassword', newPassword);
-                        } else {
-                            // Password was removed, so remove the remembered one too
-                            localStorage.removeItem('rememberedPassword');
+                saveSettingsButton.addEventListener('click', () => {
+                    const newPassword = passwordSettingInput.value.trim();
+
+                    // Check if the password has actually changed
+                    if (newPassword !== state.password) {
+                        state.password = newPassword;
+                        // Sync with remembered password
+                        const rememberedPassword = localStorage.getItem('rememberedPassword');
+                        if (rememberedPassword) {
+                            if (newPassword) {
+                                localStorage.setItem('rememberedPassword', newPassword);
+                            } else {
+                                // Password was removed, so remove the remembered one too
+                                localStorage.removeItem('rememberedPassword');
+                            }
                         }
                     }
-                }
 
-                state.requirePasswordOnLoad = requirePasswordToggle.checked;
+                    state.requirePasswordOnLoad = requirePasswordToggle.checked;
 
-                saveState();
-                hideModal(settingsModal);
-                showPopupMessage('設定を保存しました。');
-                rerender(); // Rerender to update UI elements that might depend on settings
-            });
+                    saveState();
+                    hideModal(settingsModal);
+                    showPopupMessage('設定を保存しました。');
+                    rerender(); // Rerender to update UI elements that might depend on settings
+                });
             }
 
             if (settingsCloseButton) {
@@ -3815,7 +4186,8 @@
                 });
             }
 
-            exportJsonButton.addEventListener('click', exportToJson);
+            if (exportJsonButton) exportJsonButton.addEventListener('click', exportToJson);
+            if (exportExcelButton) exportExcelButton.addEventListener('click', exportToExcel);
             importJsonButton.addEventListener('click', importFromJson);
 
             searchBox.addEventListener('input', (e) => {
@@ -4175,36 +4547,101 @@
             // --- Bulk Edit ---
             const bulkEditMonthsContainer = document.getElementById('bulk-edit-months');
 
+            function getBulkEditMonthCheckboxes() {
+                if (!bulkEditMonthsContainer) return [];
+                return Array.from(bulkEditMonthsContainer.querySelectorAll('input[type="checkbox"][data-month-id]'));
+            }
+
+            function syncBulkEditSelectAllStates() {
+                if (!bulkEditMonthsContainer) return;
+                const monthCheckboxes = getBulkEditMonthCheckboxes();
+                const enabledMonths = monthCheckboxes.filter(cb => !cb.disabled);
+                const master = document.getElementById('bulk-month-all');
+                if (master) {
+                    master.disabled = enabledMonths.length === 0;
+                    master.parentElement?.classList.toggle('disabled', master.disabled);
+                    master.checked = !master.disabled && enabledMonths.every(cb => cb.checked);
+                }
+
+                const yearGroups = bulkEditMonthsContainer.querySelectorAll('.month-checkbox-group[data-year-id]');
+                yearGroups.forEach(group => {
+                    const yearCheckbox = group.querySelector('.select-all-year input[type="checkbox"]');
+                    if (!yearCheckbox) return;
+                    const childMonths = Array.from(group.querySelectorAll('input[type="checkbox"][data-month-id]'));
+                    const enabledChildren = childMonths.filter(cb => !cb.disabled);
+                    yearCheckbox.disabled = enabledChildren.length === 0;
+                    yearCheckbox.parentElement?.classList.toggle('disabled', yearCheckbox.disabled);
+                    if (yearCheckbox.disabled) {
+                        yearCheckbox.checked = false;
+                    } else {
+                        yearCheckbox.checked = enabledChildren.length > 0 && enabledChildren.every(cb => cb.checked);
+                    }
+                });
+            }
+
+            function updateBulkEditMonthAvailability() {
+                if (!bulkEditMonthsContainer) return;
+                const selectedName = bulkEditSelect.value;
+                const monthCheckboxes = getBulkEditMonthCheckboxes();
+
+                monthCheckboxes.forEach(cb => {
+                    const wrapper = cb.parentElement;
+                    if (!selectedName) {
+                        cb.disabled = true;
+                        cb.checked = false;
+                        wrapper?.classList.add('disabled');
+                        return;
+                    }
+
+                    const yearId = cb.getAttribute('data-year-id');
+                    const monthId = cb.getAttribute('data-month-id');
+                    const monthData = findMonth(yearId, monthId);
+                    const hasItem = !!monthData && (
+                        monthData.income.some(item => item.name === selectedName) ||
+                        monthData.expenditure.some(item => item.name === selectedName)
+                    );
+
+                    cb.disabled = !hasItem;
+                    if (!hasItem) cb.checked = false;
+                    wrapper?.classList.toggle('disabled', !hasItem);
+                });
+
+                syncBulkEditSelectAllStates();
+            }
+
+
             const populateBulkEditMonths = () => {
                 let content = '';
-                const createCheckbox = (id, label, value, isChecked = true, customClass = '') => `
-            <div class="month-checkbox-item ${customClass}">
-                <input type="checkbox" id="${id}" value="${value}" ${isChecked ? 'checked' : ''}>
-                <label for="${id}">${label}</label>
+                const selectAllGlobalLabel = '\u3059\u3079\u3066\u9078\u629c/\u89e3\u9664';
+                const selectAllYearLabel = '\u3053\u306e\u5e74\u306e\u6708\u3092\u3059\u3079\u3066\u9078\u629c';
+                const createCheckbox = (id, label, value, isChecked = true, customClass = '', dataAttrs = '') => `
+            <div class=\"month-checkbox-item ${customClass}\">
+                <input type=\"checkbox\" id=\"${id}\" value=\"${value}\" ${isChecked ? 'checked' : ''} ${dataAttrs}>
+                <label for=\"${id}\">${label}</label>
             </div>`;
 
-                content += `<div class="month-checkbox-group">
-            ${createCheckbox('bulk-month-all', 'すべて選択/解除', 'all', true, 'select-all-global')}
+                content += `<div class=\"month-checkbox-group\">
+            ${createCheckbox('bulk-month-all', selectAllGlobalLabel, 'all', true, 'select-all-global')}
         </div>`;
 
                 state.financialData.forEach(year => {
-                    content += `<div class="month-checkbox-group" data-year-id="${year.id}">`;
-                    content += `<span class="month-checkbox-group-title">${year.year}</span>`;
+                    content += `<div class=\"month-checkbox-group\" data-year-id=\"${year.id}\">`;
+                    content += `<span class=\"month-checkbox-group-title\">${year.year}</span>`;
                     const yearCheckboxId = `bulk-month-year-${year.id}`;
-                    content += createCheckbox(yearCheckboxId, 'この年の月をすべて選択', year.id, true, 'select-all-year');
+                    content += createCheckbox(yearCheckboxId, selectAllYearLabel, year.id, true, 'select-all-year');
 
                     year.months.forEach(month => {
-                        content += createCheckbox(`bulk-month-${month.id}`, month.month, month.id, true);
+                        content += createCheckbox(`bulk-month-${month.id}`, month.month, month.id, true, '', `data-year-id=\"${year.id}\" data-month-id=\"${month.id}\"`);
                     });
                     content += `</div>`;
                 });
                 bulkEditMonthsContainer.innerHTML = content;
+                updateBulkEditMonthAvailability();
             };
 
-            
-            const populateBulkEditSelect = () => {
+const populateBulkEditSelect = () => {
                 const allItems = extractCategoriesFromFinancialData();
-                bulkEditSelect.innerHTML = '<option value="">編集する項目を選択...</option>';
+                bulkEditSelect.innerHTML = '<option value=>�ҏW種別鍀�ڂ�I��...</option>';
                 allItems.forEach(name => {
                     const option = document.createElement('option');
                     option.value = name;
@@ -4233,38 +4670,35 @@
                 });
             }
 
+            bulkEditSelect.addEventListener('change', updateBulkEditMonthAvailability);
+
             bulkEditMonthsContainer.addEventListener('change', (e) => {
                 const target = e.target;
-                if (target.type !== 'checkbox') return;
+                if (target.type !== 'checkbox' || target.disabled) return;
                 const isChecked = target.checked;
 
                 if (target.value === 'all') {
-                    bulkEditMonthsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = isChecked);
+                    bulkEditMonthsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                        if (!cb.disabled) cb.checked = isChecked;
+                    });
                 } else if (target.parentElement.classList.contains('select-all-year')) {
                     const yearGroup = target.closest('.month-checkbox-group');
-                    yearGroup.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = isChecked);
-                    if (!isChecked) {
-                        document.getElementById('bulk-month-all').checked = false;
-                    }
-                } else {
-                    if (!isChecked) {
-                        document.getElementById('bulk-month-all').checked = false;
-                        const yearCheckbox = target.closest('.month-checkbox-group').querySelector('.select-all-year input');
-                        if (yearCheckbox) yearCheckbox.checked = false;
-                    }
+                    yearGroup.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                        if (!cb.disabled) cb.checked = isChecked;
+                    });
                 }
-            });
 
-            bulkEditForm.addEventListener('submit', e => {
+                syncBulkEditSelectAllStates();
+            });
+bulkEditForm.addEventListener('submit', e => {
                 e.preventDefault();
                 const oldName = bulkEditSelect.value;
                 const newName = bulkEditNewName.value.trim();
                 const newAmountStr = bulkEditNewAmount.value;
                 const newAmount = newAmountStr ? parseInt(newAmountStr, 10) : null;
 
-                const selectedMonthIds = Array.from(bulkEditMonthsContainer.querySelectorAll('input[type="checkbox"]:checked'))
-                    .map(cb => cb.value)
-                    .filter(value => value !== 'all' && !value.startsWith('year_'));
+                const selectedMonthIds = Array.from(bulkEditMonthsContainer.querySelectorAll('input[type="checkbox"][data-month-id]:checked'))
+                    .map(cb => cb.value);
 
                 if (!oldName) return showPopupMessage('編集する項目を選択してください。');
                 if (newName === '' && newAmount === null) return showPopupMessage('新しい項目名または新しい金額の少なくとも一方を入力してください。');
@@ -4327,17 +4761,17 @@
             };
 
 
-    function showSummaryModal() {
-        const modalContent = createSummaryContent();
-        openModal('収支概要', modalContent, 'wide');
-    }
+            function showSummaryModal() {
+                const modalContent = createSummaryContent();
+                openModal('収支概要', modalContent, 'wide');
+            }
 
-    function createSummaryContent() {
-        const totalIncome = Object.values(appData.years).reduce((sum, year) => sum + year.income, 0);
-        const totalExpenditure = Object.values(appData.years).reduce((sum, year) => sum + year.expenditure, 0);
-        const netTotal = totalIncome - totalExpenditure;
+            function createSummaryContent() {
+                const totalIncome = Object.values(appData.years).reduce((sum, year) => sum + year.income, 0);
+                const totalExpenditure = Object.values(appData.years).reduce((sum, year) => sum + year.expenditure, 0);
+                const netTotal = totalIncome - totalExpenditure;
 
-        return `
+                return `
             <div class="summary-overview">
                 <div class="summary-item">
                     <span class="summary-label">総収入:</span>
@@ -4381,14 +4815,14 @@
                 }).join('')}
             </div>
         `;
-    }
+            }
 
-    function formatCurrency(amount) {
-        return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(amount);
-    }
+            function formatCurrency(amount) {
+                return new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(amount);
+            }
 
-    // Initialize the app
-    initializeApp();
+            // Initialize the app
+            initializeApp();
         });
 
         // ポップアップメッセージを表示する関数
@@ -4411,6 +4845,7 @@
                 }
             };
         }
+
     </script>
 
 </body>
