@@ -447,6 +447,20 @@
             border-radius: var(--border-radius);
             overflow: hidden;
             background-color: #e9ecef;
+            position: relative;
+        }
+
+        .chart-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+            pointer-events: none;
+            white-space: nowrap;
         }
 
         .chart-income,
@@ -2135,6 +2149,43 @@
 
             .modal-content.wide .months-checkbox-grid {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .modal-content.wide {
+                width: calc(100% - 1rem);
+                max-height: 90vh;
+                overflow-y: auto;
+                padding: 1.25rem;
+            }
+
+            .modal-content.wide .modal-header h2 {
+                font-size: 1.2rem;
+            }
+
+            .modal-content.wide .bulk-edit-columns {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .modal-content.wide .bulk-edit-column {
+                padding: 0.25rem 0;
+            }
+
+            .modal-content.wide .months-checkbox-container {
+                max-height: 50vh;
+                overflow-y: auto;
+                padding-right: 0.5rem;
+            }
+
+            .modal-content.wide .month-checkbox-item {
+                padding: 0.35rem 0;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .modal-content.wide .month-checkbox-item:last-child {
+                border-bottom: none;
             }
         }
     </style>
@@ -3887,7 +3938,7 @@ const exportToJson = () => {
                         <div class="summary-item"><span class="label">収入合計:</span> <span class="value income">${formatter.format(totalIncome)}</span></div>
                         <div class="summary-item"><span class="label">支出合計:</span> <span class="value expenditure">${formatter.format(totalExpenditure)}</span></div>
                     </div>
-                    <div class="chart-container" data-year-id="${year.id}" data-month-id="${month.id}"><div class="chart"><div class="chart-income" style="width: ${incomePercent}%"></div><div class="chart-expenditure" style="width: ${100 - incomePercent}%"></div></div></div>
+                    <div class="chart-container" data-year-id="${year.id}" data-month-id="${month.id}"><div class="chart"><div class="chart-income" style="width: ${incomePercent}%"></div><div class="chart-expenditure" style="width: ${100 - incomePercent}%"></div><div class="chart-label">収入${incomePercent.toFixed(0)}% / 支出${(100 - incomePercent).toFixed(0)}%</div></div></div>
                     <div class="details">
                         <div class="notes-section">
                             <h4>メモ</h4>
