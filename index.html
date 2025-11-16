@@ -4641,7 +4641,7 @@ const exportToJson = () => {
 
 const populateBulkEditSelect = () => {
                 const allItems = extractCategoriesFromFinancialData();
-                bulkEditSelect.innerHTML = '<option value=>�ҏW種別鍀�ڂ�I��...</option>';
+                bulkEditSelect.innerHTML = '<option value="">編集する項目を選択...</option>';
                 allItems.forEach(name => {
                     const option = document.createElement('option');
                     option.value = name;
