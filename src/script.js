@@ -69,6 +69,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const bulkAddCloseButton = bulkAddModal.querySelector('.close-btn');
 
     const bulkAddItemSelect = document.getElementById('bulk-add-item-select');
+    const bulkAddItemSearch = document.getElementById('bulk-add-item-search');
+    const bulkAddItemCount = document.getElementById('bulk-add-item-count');
     const bulkAddMonthsContainer = document.getElementById('bulk-add-months-container');
     const bulkAddTypeIncome = document.getElementById('bulk-add-type-income');
     const bulkAddTypeExpenditure = document.getElementById('bulk-add-type-expenditure');
@@ -92,6 +94,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const populateBulkAddItemOptions = () => {
         if (!bulkAddItemSelect) return;
         const type = bulkAddTypeIncome.checked ? 'income' : 'expenditure';
+        const previousValue = bulkAddItemSelect.value;
+        const searchText = normalizeBulkAddName(bulkAddItemSearch?.value).toLocaleLowerCase('ja-JP');
         bulkAddItemSelect.innerHTML = '';
 
         const placeholderOption = document.createElement('option');
@@ -101,7 +105,10 @@ document.addEventListener('DOMContentLoaded', function () {
         placeholderOption.selected = true;
         bulkAddItemSelect.appendChild(placeholderOption);
 
-        const filteredCandidates = bulkAddCandidates.filter(candidate => candidate.type === type);
+        const typeCandidates = bulkAddCandidates.filter(candidate => candidate.type === type);
+        const filteredCandidates = searchText
+            ? typeCandidates.filter(candidate => candidate.searchText.includes(searchText))
+            : typeCandidates;
         const hasCandidates = filteredCandidates.length > 0;
         bulkAddItemSelect.disabled = !hasCandidates;
 
@@ -109,8 +116,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const emptyOption = document.createElement('option');
             emptyOption.value = '';
             emptyOption.disabled = true;
-            emptyOption.textContent = type === 'income' ? '追加できる収入項目がありません' : '追加できる支出項目がありません';
+            emptyOption.textContent = searchText ? '検索に一致する項目がありません' : (type === 'income' ? '追加できる収入項目がありません' : '追加できる支出項目がありません');
             bulkAddItemSelect.appendChild(emptyOption);
+            if (bulkAddItemCount) {
+                bulkAddItemCount.textContent = searchText ? `0件 / ${typeCandidates.length}件` : '';
+            }
             return;
         }
 
@@ -122,6 +132,18 @@ document.addEventListener('DOMContentLoaded', function () {
             option.textContent = `${candidate.name} (${amountText})${sourceText}`;
             bulkAddItemSelect.appendChild(option);
         });
+
+        if (filteredCandidates.some(candidate => candidate.value === previousValue)) {
+            bulkAddItemSelect.value = previousValue;
+        } else {
+            bulkAddItemSelect.value = '';
+        }
+
+        if (bulkAddItemCount) {
+            bulkAddItemCount.textContent = searchText
+                ? `${filteredCandidates.length}件 / ${typeCandidates.length}件`
+                : `${typeCandidates.length}件`;
+        }
     };
 
     const updateMonthCheckboxes = () => {
@@ -201,6 +223,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 yearLabel,
                 monthLabel,
                 sourceLabel,
+                searchText: [
+                    normalizedName,
+                    normalizedAmount,
+                    bulkAddCurrencyFormatter.format(normalizedAmount),
+                    yearLabel,
+                    monthLabel,
+                    sourceLabel,
+                    fromCatalog ? '項目リスト 金額未設定' : ''
+                ].join(' ').toLocaleLowerCase('ja-JP'),
                 data: {
                     ...data,
                     name: normalizedName,
@@ -287,6 +318,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         bulkAddCandidates = buildBulkAddCandidates();
+        if (bulkAddItemSearch) {
+            bulkAddItemSearch.value = '';
+        }
         populateBulkAddItemOptions();
         updateMonthCheckboxes();
     };
@@ -301,6 +335,12 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     if (bulkAddItemSelect) {
         bulkAddItemSelect.addEventListener('change', updateMonthCheckboxes);
+    }
+    if (bulkAddItemSearch) {
+        bulkAddItemSearch.addEventListener('input', () => {
+            populateBulkAddItemOptions();
+            updateMonthCheckboxes();
+        });
     }
 
     bulkAddSelectAllMonths.addEventListener('change', (e) => {
@@ -2094,6 +2134,85 @@ document.addEventListener('DOMContentLoaded', function () {
         return safeText.replace(regex, '<span class="search-highlight">$1</span>');
     };
 
+    const renderPrintItems = (items, formatter) => {
+        const enabledItems = items.filter(isItemEnabled);
+        if (enabledItems.length === 0) {
+            return '<span class="print-empty">なし</span>';
+        }
+
+        return `<div class="print-item-list">
+            ${enabledItems.map(item => `
+                <div class="print-item-line">
+                    <span>${escapeHTML(item.name)}</span>
+                    <span>${formatter.format(Number(item.amount) || 0)}</span>
+                </div>
+            `).join('')}
+        </div>`;
+    };
+
+    const buildPrintReport = (filteredData, totals, formatter) => {
+        const { initialBalance, grandTotalIncome, grandTotalExpenditure, netTotal } = totals;
+
+        return `
+            <section class="print-report" aria-label="印刷用収支表">
+                <div class="print-report-header">
+                    <h1>${escapeHTML(state.userName ? `${state.userName}の収支管理表` : '収支管理表')}</h1>
+                </div>
+
+                <table class="print-summary-table">
+                    <thead>
+                        <tr>
+                            <th>初期残高</th>
+                            <th>総収入</th>
+                            <th>総支出</th>
+                            <th>最終残高</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>${formatter.format(initialBalance)}</td>
+                            <td>${formatter.format(grandTotalIncome)}</td>
+                            <td>${formatter.format(grandTotalExpenditure)}</td>
+                            <td>${formatter.format(netTotal)}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                ${filteredData.map(year => `
+                    <section class="print-year-section">
+                        <h2>${escapeHTML(year.year)}</h2>
+                        <table class="print-month-table">
+                            <thead>
+                                <tr>
+                                    <th class="print-month-col">月</th>
+                                    <th>収入</th>
+                                    <th>支出</th>
+                                    <th>差額</th>
+                                    <th>残高</th>
+                                    <th class="print-items-col">収入項目</th>
+                                    <th class="print-items-col">支出項目</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${year.months.map(month => `
+                                    <tr>
+                                        <th scope="row">${escapeHTML(month.month)}</th>
+                                        <td>${formatter.format(Number(month.totalIncome) || 0)}</td>
+                                        <td>${formatter.format(Number(month.totalExpenditure) || 0)}</td>
+                                        <td>${formatter.format((Number(month.totalIncome) || 0) - (Number(month.totalExpenditure) || 0))}</td>
+                                        <td>${formatter.format(Number(month.finalBalance) || 0)}</td>
+                                        <td>${renderPrintItems(month.income || [], formatter)}</td>
+                                        <td>${renderPrintItems(month.expenditure || [], formatter)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </section>
+                `).join('')}
+            </section>
+        `;
+    };
+
     let initialAnimationFinished = false;
     const finishInitialAnimation = () => {
         if (initialAnimationFinished) return;
@@ -2215,6 +2334,13 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             appContainer.appendChild(yearSection);
         });
+
+        appContainer.insertAdjacentHTML('beforeend', buildPrintReport(filteredData, {
+            initialBalance,
+            grandTotalIncome,
+            grandTotalExpenditure,
+            netTotal
+        }, formatter));
 
         setupMonthsGridDrag();
         initTooltips();
