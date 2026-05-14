@@ -3235,6 +3235,144 @@
             transform: none;
         }
 
+        /* Unified bulk edit/add modal layout */
+        #bulk-add-modal .modal-content.wide,
+        #bulk-edit-modal .modal-content.wide {
+            width: min(94vw, 900px);
+            max-width: 900px;
+            height: min(720px, 86vh);
+            max-height: min(720px, 86vh);
+            display: grid;
+            grid-template-rows: auto minmax(0, 1fr) auto;
+            overflow: hidden;
+        }
+
+        #bulk-edit-modal #bulk-edit-form {
+            display: contents;
+        }
+
+        #bulk-add-modal .modal-header,
+        #bulk-edit-modal .modal-header {
+            min-height: 60px;
+        }
+
+        #bulk-add-modal .bulk-edit-columns,
+        #bulk-edit-modal .bulk-edit-columns {
+            min-height: 0;
+            margin: 0;
+            padding: 1rem 1.25rem;
+            display: grid;
+            grid-template-columns: minmax(280px, 0.9fr) minmax(320px, 1.1fr);
+            gap: 1rem;
+            overflow: hidden;
+        }
+
+        #bulk-add-modal .bulk-edit-column,
+        #bulk-edit-modal .bulk-edit-column {
+            min-width: 0;
+            min-height: 0;
+            padding: 1rem;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #bulk-add-modal .bulk-edit-column h4,
+        #bulk-edit-modal .bulk-edit-column h4 {
+            flex: 0 0 auto;
+            margin: 0 0 0.8rem;
+            padding-bottom: 0.55rem;
+            color: var(--text-color);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.95rem !important;
+        }
+
+        #bulk-add-modal .form-group,
+        #bulk-edit-modal .form-group {
+            margin-bottom: 0.85rem;
+        }
+
+        #bulk-add-modal .form-group:last-child,
+        #bulk-edit-modal .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        #bulk-add-modal .radio-toggle-group,
+        #bulk-edit-modal .radio-toggle-group {
+            width: 100%;
+        }
+
+        #bulk-add-modal select,
+        #bulk-edit-modal select,
+        #bulk-edit-modal input[type="text"],
+        #bulk-edit-modal input[type="number"] {
+            width: 100%;
+        }
+
+        #bulk-add-modal .month-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            min-height: 40px;
+            margin: 0;
+            padding: 0.55rem 0.65rem;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-sizing: border-box;
+        }
+
+        #bulk-add-modal .bulk-edit-column>hr {
+            width: 100%;
+            margin: 0.75rem 0;
+            border: 0;
+            border-top: 1px solid var(--border-color);
+        }
+
+        #bulk-add-modal .months-checkbox-container,
+        #bulk-edit-modal .months-checkbox-container {
+            flex: 1 1 auto;
+            min-height: 0;
+            max-height: none;
+            padding: 0.7rem;
+            overflow-y: auto;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+
+        #bulk-add-modal .months-checkbox-container::-webkit-scrollbar,
+        #bulk-edit-modal .months-checkbox-container::-webkit-scrollbar {
+            width: 8px;
+            display: initial;
+        }
+
+        #bulk-add-modal .months-checkbox-container::-webkit-scrollbar-thumb,
+        #bulk-edit-modal .months-checkbox-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 999px;
+        }
+
+        #bulk-add-modal .form-actions,
+        #bulk-edit-modal .form-actions {
+            grid-row: 3;
+            margin: 0;
+            padding: 0.85rem 1.25rem;
+            background: #ffffff;
+            border-top: 1px solid var(--border-color);
+            border-radius: 0 0 16px 16px;
+        }
+
+        #bulk-add-modal .form-actions .btn-primary,
+        #bulk-edit-modal .form-actions .btn-primary {
+            min-width: 120px;
+        }
+
         .popup-message {
             z-index: 3000;
         }
@@ -3360,9 +3498,86 @@
                 margin-right: -1rem;
                 padding: 0.85rem 1rem;
             }
+
+            #bulk-add-modal .modal-content.wide,
+            #bulk-edit-modal .modal-content.wide {
+                width: 100%;
+                height: min(760px, calc(100vh - 1.5rem));
+                max-height: calc(100vh - 1.5rem);
+            }
+
+            #bulk-add-modal .bulk-edit-columns,
+            #bulk-edit-modal .bulk-edit-columns {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+                padding: 0.85rem 1rem;
+                overflow-y: auto;
+                scrollbar-width: none;
+            }
+
+            #bulk-add-modal .bulk-edit-columns::-webkit-scrollbar,
+            #bulk-edit-modal .bulk-edit-columns::-webkit-scrollbar {
+                display: none;
+            }
+
+            #bulk-add-modal .bulk-edit-column,
+            #bulk-edit-modal .bulk-edit-column {
+                padding: 0.85rem;
+            }
+
+            #bulk-add-modal .months-checkbox-container,
+            #bulk-edit-modal .months-checkbox-container {
+                max-height: 240px;
+                flex: 0 1 auto;
+            }
+
+            #bulk-add-modal .form-actions,
+            #bulk-edit-modal .form-actions {
+                margin: 0;
+                padding: 0.85rem 1rem;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+
+            #bulk-edit-modal .form-actions {
+                grid-template-columns: 1fr;
+            }
+
+            #bulk-add-modal .form-actions button,
+            #bulk-edit-modal .form-actions button {
+                width: 100%;
+            }
         }
 
         /* Data analysis modal final layout guard */
+        @keyframes analysisPanelEnter {
+            from {
+                opacity: 0;
+                transform: translateY(8px) scale(0.99);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes analysisContentEnter {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #data-analysis-modal.analysis-modal-enter .modal-content.wide {
+            animation: analysisPanelEnter 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+        }
+
         #data-analysis-modal .modal-content.wide {
             display: grid;
             grid-template-rows: auto auto minmax(0, 1fr) auto;
@@ -3403,6 +3618,10 @@
             padding: 1rem;
             box-sizing: border-box;
             overflow: hidden;
+        }
+
+        #data-analysis-modal .analysis-content .chart-container.is-active {
+            animation: analysisContentEnter 180ms ease-out both;
         }
 
         #data-analysis-modal .analysis-content canvas {

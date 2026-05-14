@@ -80,6 +80,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let bulkAddCandidates = [];
     const bulkAddCurrencyFormatter = new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' });
+    const bulkAddTypes = ['income', 'expenditure'];
+
+    const normalizeBulkAddName = (name) => String(name ?? '').trim().replace(/\s+/g, ' ');
 
     const getSelectedBulkAddItem = () => {
         if (!bulkAddItemSelect) return null;
@@ -114,7 +117,9 @@ document.addEventListener('DOMContentLoaded', function () {
         filteredCandidates.forEach(candidate => {
             const option = document.createElement('option');
             option.value = candidate.value;
-            option.textContent = `${candidate.yearLabel} ${candidate.monthLabel} - ${candidate.name} (${bulkAddCurrencyFormatter.format(candidate.amount)})`;
+            const amountText = candidate.hasAmount ? bulkAddCurrencyFormatter.format(candidate.amount) : '金額未設定';
+            const sourceText = candidate.sourceLabel ? ` / ${candidate.sourceLabel}` : '';
+            option.textContent = `${candidate.name} (${amountText})${sourceText}`;
             bulkAddItemSelect.appendChild(option);
         });
     };
@@ -167,27 +172,83 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     const buildBulkAddCandidates = () => {
-        const byKey = new Map(); // key: `${type}|${name}`
+        const byKey = new Map();
+        const knownNames = new Set();
+        const candidateNameTypes = new Set();
+
+        const rememberKnownName = (name) => {
+            const normalized = normalizeBulkAddName(name);
+            if (normalized) knownNames.add(normalized);
+            return normalized;
+        };
+
+        const addCandidate = ({ type, name, amount = 0, yearLabel = '', monthLabel = '', sourceLabel = '', data = {}, fromCatalog = false }) => {
+            if (!bulkAddTypes.includes(type)) return;
+            const normalizedName = rememberKnownName(name);
+            if (!normalizedName) return;
+            const normalizedAmount = Number(amount) || 0;
+            const amountKey = fromCatalog ? 'catalog' : normalizedAmount;
+            const key = `${type}|${normalizedName}|${amountKey}`;
+            if (byKey.has(key)) return;
+            candidateNameTypes.add(`${type}|${normalizedName}`);
+
+            byKey.set(key, {
+                value: key,
+                type,
+                name: normalizedName,
+                amount: normalizedAmount,
+                hasAmount: !fromCatalog,
+                yearLabel,
+                monthLabel,
+                sourceLabel,
+                data: {
+                    ...data,
+                    name: normalizedName,
+                    amount: normalizedAmount,
+                    disabled: false
+                }
+            });
+        };
+
         state.financialData.forEach(yearData => {
             yearData.months.forEach(monthData => {
-                ['income', 'expenditure'].forEach(type => {
+                bulkAddTypes.forEach(type => {
                     monthData[type].forEach(item => {
-                        const key = `${type}|${item.name}`;
-                        if (byKey.has(key)) return;
-                        byKey.set(key, {
-                            value: key,
+                        const amount = Number(item.amount) || 0;
+                        addCandidate({
                             type,
                             name: item.name,
-                            amount: Number(item.amount) || 0,
+                            amount,
                             yearLabel: yearData.year,
                             monthLabel: monthData.month,
+                            sourceLabel: `${yearData.year} ${monthData.month}`,
                             data: { ...item }
                         });
                     });
                 });
             });
         });
-        return Array.from(byKey.values()).sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+
+        [...(state.categories || []), ...loadCategories(), ...extractCategoriesFromFinancialData()].forEach(rememberKnownName);
+        knownNames.forEach(name => {
+            bulkAddTypes.forEach(type => {
+                if (candidateNameTypes.has(`${type}|${name}`)) return;
+                addCandidate({
+                    type,
+                    name,
+                    sourceLabel: '項目リスト',
+                    data: { name, amount: 0, disabled: false },
+                    fromCatalog: true
+                });
+            });
+        });
+
+        return Array.from(byKey.values()).sort((a, b) => (
+            a.type.localeCompare(b.type) ||
+            a.name.localeCompare(b.name, 'ja') ||
+            b.amount - a.amount ||
+            a.sourceLabel.localeCompare(b.sourceLabel, 'ja')
+        ));
     };
 
     const populateBulkAddModal = () => {
@@ -294,6 +355,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         if (addedCount > 0) {
+            if (!state.categories.includes(selectedItem.name)) {
+                state.categories.push(selectedItem.name);
+                state.categories.sort((a, b) => a.localeCompare(b, 'ja'));
+            }
             rerender();
             showPopupMessage(`${addedCount}件の月に「${selectedItem.name}」を追加しました。`);
             hideModal(bulkAddModal);
@@ -3241,11 +3306,42 @@ document.addEventListener('DOMContentLoaded', function () {
     let comparisonChart = null;
     let incomeBreakdownChart = null;
     let expenditureBreakdownChart = null;
+    const analysisChartMotion = {
+        animation: {
+            duration: 650,
+            easing: 'easeOutQuart'
+        },
+        transitions: {
+            active: {
+                animation: {
+                    duration: 120
+                }
+            },
+            resize: {
+                animation: {
+                    duration: 0
+                }
+            }
+        }
+    };
+    const analysisTooltipOptions = {
+        backgroundColor: 'rgba(15, 23, 42, 0.92)',
+        titleColor: '#f8fafc',
+        bodyColor: '#f8fafc',
+        borderColor: 'rgba(148, 163, 184, 0.28)',
+        borderWidth: 1,
+        cornerRadius: 10,
+        padding: 10,
+        displayColors: true
+    };
 
     // データ分析モーダルを開く
     if (dataAnalysisButton) {
         dataAnalysisButton.addEventListener('click', () => {
             showModal(dataAnalysisModal);
+            dataAnalysisModal.classList.remove('analysis-modal-enter');
+            void dataAnalysisModal.offsetWidth;
+            dataAnalysisModal.classList.add('analysis-modal-enter');
             renderAnalysisCharts();
             calculateAndDisplayStats();
         });
@@ -3276,9 +3372,15 @@ document.addEventListener('DOMContentLoaded', function () {
             tab.classList.add('active');
 
             const tabType = tab.dataset.tab;
-            document.getElementById('trend-chart-container').style.display = tabType === 'trend' ? 'block' : 'none';
-            document.getElementById('comparison-chart-container').style.display = tabType === 'comparison' ? 'block' : 'none';
-            document.getElementById('breakdown-chart-container').style.display = tabType === 'breakdown' ? 'block' : 'none';
+            [
+                { element: document.getElementById('trend-chart-container'), active: tabType === 'trend' },
+                { element: document.getElementById('comparison-chart-container'), active: tabType === 'comparison' },
+                { element: document.getElementById('breakdown-chart-container'), active: tabType === 'breakdown' }
+            ].forEach(({ element, active }) => {
+                if (!element) return;
+                element.style.display = active ? 'block' : 'none';
+                element.classList.toggle('is-active', active);
+            });
 
             requestAnimationFrame(() => {
                 if (tabType === 'trend' && trendChart) trendChart.resize();
@@ -3377,9 +3479,15 @@ document.addEventListener('DOMContentLoaded', function () {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                ...analysisChartMotion,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
                 plugins: {
                     legend: { position: 'top' },
-                    title: { display: true, text: '月別収支推移' }
+                    title: { display: true, text: '月別収支推移' },
+                    tooltip: analysisTooltipOptions
                 },
                 scales: {
                     x: {
@@ -3437,9 +3545,15 @@ document.addEventListener('DOMContentLoaded', function () {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                ...analysisChartMotion,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
                 plugins: {
                     legend: { position: 'top' },
-                    title: { display: true, text: '月別収支比較' }
+                    title: { display: true, text: '月別収支比較' },
+                    tooltip: analysisTooltipOptions
                 },
                 scales: {
                     x: {
@@ -3490,6 +3604,13 @@ document.addEventListener('DOMContentLoaded', function () {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                ...analysisChartMotion,
+                animation: {
+                    duration: 620,
+                    easing: 'easeOutQuart',
+                    animateRotate: true,
+                    animateScale: false
+                },
                 plugins: {
                     legend: {
                         display: window.innerWidth > 768,
@@ -3501,12 +3622,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     },
                     tooltip: {
+                        ...analysisTooltipOptions,
                         callbacks: {
                             label: function (context) {
                                 const label = context.label || '';
                                 const value = context.parsed || 0;
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percent = ((value / total) * 100).toFixed(1);
+                                const percent = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
                                 return `${label}: ¥${value.toLocaleString()} (${percent}%)`;
                             }
                         }
@@ -3534,6 +3656,13 @@ document.addEventListener('DOMContentLoaded', function () {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                ...analysisChartMotion,
+                animation: {
+                    duration: 620,
+                    easing: 'easeOutQuart',
+                    animateRotate: true,
+                    animateScale: false
+                },
                 plugins: {
                     legend: {
                         display: window.innerWidth > 768,
@@ -3545,12 +3674,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     },
                     tooltip: {
+                        ...analysisTooltipOptions,
                         callbacks: {
                             label: function (context) {
                                 const label = context.label || '';
                                 const value = context.parsed || 0;
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percent = ((value / total) * 100).toFixed(1);
+                                const percent = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
                                 return `${label}: ¥${value.toLocaleString()} (${percent}%)`;
                             }
                         }
