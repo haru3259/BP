@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
+    document.body.classList.add('initial-animation');
+
     // --- DOM Elements ---
     const appContainer = document.getElementById('app-container');
     const editModeToggle = document.getElementById('edit-mode-toggle');
@@ -6,61 +8,57 @@ document.addEventListener('DOMContentLoaded', function () {
     const resetDataButton = document.getElementById('reset-data-button');
     const searchBox = document.getElementById('search-box');
 
-    // --- Header Toggle (Mobile) ---
-    const headerToggleBtn = document.getElementById('header-toggle-btn');
-    const headerCollapsible = document.querySelector('.header-collapsible');
+    // --- Sidebar Toggle ---
+    const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+    const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
 
-    if (headerToggleBtn && headerCollapsible) {
-        headerToggleBtn.addEventListener('click', function () {
-            const isExpanded = headerCollapsible.classList.toggle('expanded');
-            this.classList.toggle('active', isExpanded);
-            this.setAttribute('aria-expanded', isExpanded);
-            this.setAttribute('aria-label', isExpanded ? 'メニューを閉じる' : 'メニューを開く');
-        });
+    function openSidebar() {
+        sidebar.classList.add('open');
+        sidebarOverlay.classList.add('active');
+        sidebarToggleBtn.setAttribute('aria-label', 'メニューを閉じる');
+        sidebarToggleBtn.setAttribute('aria-expanded', 'true');
+        sidebarOverlay.setAttribute('aria-hidden', 'false');
+    }
 
-        // ヘッダー外をクリックしたら閉じる（モーダル内のクリックは除外）
-        document.addEventListener('click', function (e) {
-            // モーダルが開いているかチェック
-            const anyModalOpen = document.querySelector('.modal-overlay[style*="display: flex"], .modal-overlay[style*="display: block"], .modal-overlay.visible');
-            const popupOpen = document.querySelector('#popupMessage[style*="display: flex"], #popupMessage[style*="display: block"]');
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('active');
+        sidebarToggleBtn.setAttribute('aria-label', 'メニューを開く');
+        sidebarToggleBtn.setAttribute('aria-expanded', 'false');
+        sidebarOverlay.setAttribute('aria-hidden', 'true');
+    }
 
-            if (window.innerWidth <= 768 &&
-                headerCollapsible.classList.contains('expanded') &&
-                !e.target.closest('header') &&
-                !e.target.closest('.modal-overlay') &&
-                !e.target.closest('.modal-content') &&
-                !e.target.closest('#popupMessage') &&
-                !anyModalOpen &&
-                !popupOpen) {
-                headerCollapsible.classList.remove('expanded');
-                headerToggleBtn.classList.remove('active');
-                headerToggleBtn.setAttribute('aria-expanded', 'false');
-                headerToggleBtn.setAttribute('aria-label', 'メニューを開く');
-            }
-        });
+    if (sidebarToggleBtn) {
+        sidebarToggleBtn.addEventListener('click', openSidebar);
+    }
+    if (sidebarCloseBtn) {
+        sidebarCloseBtn.addEventListener('click', closeSidebar);
+    }
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', closeSidebar);
+    }
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sidebar?.classList.contains('open')) {
+            closeSidebar();
+            sidebarToggleBtn?.focus();
+        }
+    });
 
-        // ウィンドウリサイズ時にデスクトップ表示に戻ったらリセット
-        window.addEventListener('resize', function () {
-            if (window.innerWidth > 768) {
-                headerCollapsible.classList.remove('expanded');
-                headerToggleBtn.classList.remove('active');
-                headerToggleBtn.setAttribute('aria-expanded', 'false');
-            }
+    // サイドバー内のボタンをクリックしたらサイドバーを閉じる
+    if (sidebar) {
+        sidebar.querySelectorAll('.sidebar-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                closeSidebar();
+            });
         });
     }
 
     const exportJsonButton = document.getElementById('export-json-button');
     const exportExcelButton = document.getElementById('export-excel-button');
     const exportWordButton = document.getElementById('export-word-button');
-    if (exportJsonButton) {
-        exportJsonButton.textContent = 'エクスポート (JSON)';
-    }
-    if (exportExcelButton) {
-        exportExcelButton.textContent = 'エクスポート (Excel)';
-    }
-    if (exportWordButton) {
-        exportWordButton.textContent = 'エクスポート (Word)';
-    }
+    const printButton = document.getElementById('print-button');
     const importJsonButton = document.getElementById('import-json-button');
     const bulkEditButton = document.getElementById('bulk-edit-button');
     const bulkAddButton = document.getElementById('bulk-add-button');
@@ -287,7 +285,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const newItem = {
                 ...selectedItem.data,
-                id: `item_${Date.now()}_${Math.random()}`
+                id: `item_${Date.now()}_${Math.random()}`,
+                disabled: false
             };
             newItem.amount = Number(newItem.amount) || 0;
             monthData[selectedItem.type].push(newItem);
@@ -433,6 +432,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const requirePasswordToggle = document.getElementById('require-password-on-load');
     const requirePasswordToggleGroup = document.getElementById('require-password-toggle-group');
     const togglePasswordVisibility = document.getElementById('toggle-password-visibility');
+    const monthsScrollToggle = document.getElementById('months-scroll-toggle');
 
     // --- App State ---
     let state = {
@@ -440,10 +440,12 @@ document.addEventListener('DOMContentLoaded', function () {
         financialData: [],
         userName: '',
         editingItem: null, // { yearId, monthId, type, itemId }
+        draggedItem: null, // { yearId, monthId, type, itemId }
         searchTerm: '',
         categories: [],
         password: '',
-        requirePasswordOnLoad: false
+        requirePasswordOnLoad: false,
+        monthScrollOnDesktop: false
     };
 
     // --- SVG Icons ---
@@ -514,11 +516,14 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.removeItem('rememberedPassword');
         localStorage.removeItem('dataIsEncrypted');
         const storedRequirePassword = localStorage.getItem('requirePasswordOnLoad');
+        const storedMonthScroll = localStorage.getItem('monthScrollOnDesktop');
         const dataIsEncrypted = localStorage.getItem('dataIsEncrypted') === 'true';
 
         state.password = ''; // never persist password
         // If the value is stored as "false", it becomes false. Otherwise, it defaults to true.
         state.requirePasswordOnLoad = storedRequirePassword !== 'false';
+        state.monthScrollOnDesktop = storedMonthScroll === 'true';
+        applyMonthScrollSetting();
 
         const hasStoredData = !!localStorage.getItem('financialData');
         if (dataIsEncrypted && hasStoredData) {
@@ -635,12 +640,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 income: (month.income || []).map(item => ({
                     ...item,
                     id: item.id || `item_${Date.now()}_${Math.random()}`,
-                    amount: Number(item.amount) || 0
+                    amount: Number(item.amount) || 0,
+                    disabled: item.disabled === true
                 })),
                 expenditure: (month.expenditure || []).map(item => ({
                     ...item,
                     id: item.id || `item_${Date.now()}_${Math.random()}`,
-                    amount: Number(item.amount) || 0
+                    amount: Number(item.amount) || 0,
+                    disabled: item.disabled === true
                 }))
             }))
         }));
@@ -682,6 +689,120 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
+    function applyMonthScrollSetting() {
+        document.body.classList.toggle('pc-months-scroll', state.monthScrollOnDesktop);
+    }
+
+    function setupMonthsGridDrag() {
+        if (!appContainer) return;
+        const grids = appContainer.querySelectorAll('.months-grid');
+        grids.forEach((grid) => {
+            if (grid.dataset.dragReady === 'true') return;
+            grid.dataset.dragReady = 'true';
+
+            let isDown = false;
+            let startX = 0;
+            let scrollLeft = 0;
+            let dragged = false;
+            let lastX = 0;
+            let lastTime = 0;
+            let velocity = 0;
+            let momentumId = null;
+
+            const onMouseDown = (e) => {
+                if (!state.monthScrollOnDesktop) return;
+                if (e.button !== 0) return;
+                if (e.target.closest('button, a, input, textarea, select, label')) return;
+                if (state.isEditMode && e.target.closest('li.draggable-item')) return;
+                isDown = true;
+                dragged = false;
+                grid.classList.add('is-dragging');
+                startX = e.pageX - grid.offsetLeft;
+                scrollLeft = grid.scrollLeft;
+                lastX = e.pageX;
+                lastTime = Date.now();
+                velocity = 0;
+                if (momentumId !== null) {
+                    cancelAnimationFrame(momentumId);
+                    momentumId = null;
+                }
+                e.preventDefault();
+            };
+
+            const onMouseMove = (e) => {
+                if (!isDown) return;
+                const x = e.pageX - grid.offsetLeft;
+                const walk = x - startX;
+                if (Math.abs(walk) > 3) dragged = true;
+                grid.scrollLeft = scrollLeft - walk;
+                const now = Date.now();
+                const deltaX = e.pageX - lastX;
+                const deltaTime = now - lastTime;
+                if (deltaTime > 0) {
+                    velocity = deltaX / deltaTime;
+                    lastX = e.pageX;
+                    lastTime = now;
+                }
+            };
+
+            const endDrag = () => {
+                if (!isDown) return;
+                isDown = false;
+                grid.classList.remove('is-dragging');
+                const minVelocity = 0.04;
+                const maxVelocity = 1.6;
+                const decay = 0.97;
+                let momentumVelocity = Math.max(-maxVelocity, Math.min(maxVelocity, velocity));
+                if (Math.abs(momentumVelocity) < minVelocity) return;
+                const step = () => {
+                    grid.scrollLeft -= momentumVelocity * 16;
+                    momentumVelocity *= decay;
+                    if (Math.abs(momentumVelocity) >= minVelocity) {
+                        momentumId = requestAnimationFrame(step);
+                    } else {
+                        momentumId = null;
+                    }
+                };
+                momentumId = requestAnimationFrame(step);
+            };
+
+            grid.addEventListener('mousedown', onMouseDown);
+            grid.addEventListener('mousemove', onMouseMove);
+            grid.addEventListener('mouseleave', endDrag);
+            window.addEventListener('mouseup', endDrag);
+
+            grid.addEventListener('click', (e) => {
+                if (!dragged) return;
+                e.preventDefault();
+                e.stopPropagation();
+            }, true);
+        });
+    }
+
+    const autoScrollMonthsGridForItemDrag = (e) => {
+        if (!state.monthScrollOnDesktop || !document.body.classList.contains('pc-months-scroll')) return;
+
+        const grid = e.target.closest('.months-grid');
+        if (!grid) return;
+
+        const rect = grid.getBoundingClientRect();
+        const edgeSize = 88;
+        const maxSpeed = 22;
+        let scrollDelta = 0;
+
+        if (e.clientX < rect.left + edgeSize) {
+            const ratio = (rect.left + edgeSize - e.clientX) / edgeSize;
+            scrollDelta = -Math.ceil(maxSpeed * Math.min(1, ratio));
+        } else if (e.clientX > rect.right - edgeSize) {
+            const ratio = (e.clientX - (rect.right - edgeSize)) / edgeSize;
+            scrollDelta = Math.ceil(maxSpeed * Math.min(1, ratio));
+        }
+
+        if (scrollDelta !== 0) {
+            grid.scrollLeft += scrollDelta;
+        }
+    };
+
     const calculateAllBalances = () => {
         let previousMonthFinalBalance = 0;
         let grandTotalIncome = 0;
@@ -715,8 +836,8 @@ document.addEventListener('DOMContentLoaded', function () {
             let yearTotalExpenditure = 0;
 
             year.months.forEach(month => {
-                month.totalIncome = month.income.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-                month.totalExpenditure = month.expenditure.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+                month.totalIncome = month.income.reduce((sum, item) => sum + (isItemEnabled(item) ? Number(item.amount) || 0 : 0), 0);
+                month.totalExpenditure = month.expenditure.reduce((sum, item) => sum + (isItemEnabled(item) ? Number(item.amount) || 0 : 0), 0);
 
                 if (isFirstMonthEver) {
                     initialBalance = month.startingBalance;
@@ -826,6 +947,42 @@ document.addEventListener('DOMContentLoaded', function () {
         rerender();
     };
 
+    const handleItemDisabledToggle = (yearId, monthId, type, itemId, disabled) => {
+        const item = findItem(yearId, monthId, type, itemId);
+        if (!item) return;
+        item.disabled = disabled;
+        rerender();
+    };
+
+    const handleMoveItem = (source, target) => {
+        if (!source || !target) return false;
+
+        const sourceMonth = findMonth(source.yearId, source.monthId);
+        const targetMonth = findMonth(target.yearId, target.monthId);
+        if (!sourceMonth || !targetMonth || !sourceMonth[source.type] || !targetMonth[target.type]) return false;
+
+        const sourceItems = sourceMonth[source.type];
+        const sourceIndex = sourceItems.findIndex(item => item.id === source.itemId);
+        if (sourceIndex === -1) return false;
+
+        const [item] = sourceItems.splice(sourceIndex, 1);
+        const targetItems = targetMonth[target.type];
+        let insertIndex = Number.isInteger(target.index) ? target.index : targetItems.length;
+
+        if (
+            source.yearId === target.yearId &&
+            source.monthId === target.monthId &&
+            source.type === target.type &&
+            sourceIndex < insertIndex
+        ) {
+            insertIndex -= 1;
+        }
+
+        insertIndex = Math.max(0, Math.min(insertIndex, targetItems.length));
+        targetItems.splice(insertIndex, 0, item);
+        return true;
+    };
+
     const handleYearNameUpdate = (yearId, newName) => {
         const year = findYear(yearId);
         if (year) {
@@ -843,6 +1000,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const findYear = (yearId) => state.financialData.find(y => y.id === yearId);
     const findMonth = (yearId, monthId) => findYear(yearId)?.months.find(m => m.id === monthId);
     const findItem = (yearId, monthId, type, itemId) => findMonth(yearId, monthId)?.[type].find(i => i.id === itemId);
+    const isItemEnabled = item => item && item.disabled !== true;
 
     const extractCategoriesFromFinancialData = () => {
         const allItems = new Set();
@@ -892,10 +1050,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const yearSummary = { income: {}, expenditure: {} };
             year.months.forEach(month => {
                 month.income.forEach(item => {
-                    if (item.amount > 0) yearSummary.income[item.name] = (yearSummary.income[item.name] || 0) + item.amount;
+                    if (isItemEnabled(item) && item.amount > 0) yearSummary.income[item.name] = (yearSummary.income[item.name] || 0) + item.amount;
                 });
                 month.expenditure.forEach(item => {
-                    if (item.amount > 0) yearSummary.expenditure[item.name] = (yearSummary.expenditure[item.name] || 0) + item.amount;
+                    if (isItemEnabled(item) && item.amount > 0) yearSummary.expenditure[item.name] = (yearSummary.expenditure[item.name] || 0) + item.amount;
                 });
             });
             summary[year.year] = yearSummary;
@@ -949,12 +1107,12 @@ document.addEventListener('DOMContentLoaded', function () {
         state.financialData.forEach(year => {
             year.months.forEach(month => {
                 month.income.forEach(item => {
-                    if (item.amount > 0) {
+                    if (isItemEnabled(item) && item.amount > 0) {
                         incomeTotals[item.name] = (incomeTotals[item.name] || 0) + item.amount;
                     }
                 });
                 month.expenditure.forEach(item => {
-                    if (item.amount > 0) {
+                    if (isItemEnabled(item) && item.amount > 0) {
                         expenditureTotals[item.name] = (expenditureTotals[item.name] || 0) + item.amount;
                     }
                 });
@@ -993,23 +1151,34 @@ document.addEventListener('DOMContentLoaded', function () {
         showModal(categorySummaryModal);
     };
 
-    const EXCELJS_CDN_URL = "https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js";
+    const EXCELJS_CDN_URLS = [
+        "https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js",
+        "https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js",
+        "https://unpkg.com/exceljs@4.3.0/dist/exceljs.min.js"
+    ];
     let excelJsLoadPromise = null;
+
+    const loadExcelJsFrom = (url) => new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = url;
+        script.async = true;
+        script.crossOrigin = 'anonymous';
+        script.onload = () => resolve(window.ExcelJS);
+        script.onerror = () => reject(new Error(`failed to load ExcelJS from ${url}`));
+        document.head.appendChild(script);
+    });
 
     const ensureExcelJsLoaded = () => {
         if (window.ExcelJS) return Promise.resolve(window.ExcelJS);
         if (excelJsLoadPromise) return excelJsLoadPromise;
 
-        excelJsLoadPromise = new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = EXCELJS_CDN_URL;
-            script.async = true;
-            script.onload = () => resolve(window.ExcelJS);
-            script.onerror = () => {
-                excelJsLoadPromise = null;
-                reject(new Error('failed to load ExcelJS'));
-            };
-            document.head.appendChild(script);
+        excelJsLoadPromise = EXCELJS_CDN_URLS.reduce((chain, url) => {
+            return chain.catch(() => loadExcelJsFrom(url));
+        }, Promise.reject());
+
+        excelJsLoadPromise = excelJsLoadPromise.catch(err => {
+            excelJsLoadPromise = null;
+            throw err;
         });
 
         return excelJsLoadPromise;
@@ -1071,46 +1240,173 @@ document.addEventListener('DOMContentLoaded', function () {
         calculateAllBalances();
 
         const workbook = new ExcelJS.Workbook();
+        workbook.creator = '収支管理アプリ';
+        workbook.created = new Date();
+        workbook.modified = new Date();
+
         const worksheet = workbook.addWorksheet('収支リスト', {
-            views: [{ state: 'frozen', xSplit: 0, ySplit: 4, showGridLines: false }]
+            views: [{ state: 'frozen', xSplit: 0, ySplit: 3, showGridLines: false }]
         });
 
         worksheet.columns = [
-            { width: 12 }, { width: 20 }, { width: 20 },
-            { width: 20 }, { width: 20 },
-            { width: 18 }, { width: 18 }, { width: 24 },
-            { width: 20 }, { width: 20 }, { width: 24 }
+            { width: 8 },  // 月
+            { width: 22 }, // 収入項目 / 前月残額
+            { width: 14 }, // 収入金額 / 収入合計
+            { width: 22 }, // 支出項目 / 支出合計
+            { width: 14 }, // 支出金額 / 月次収支
+            { width: 14 }, // 月次収支 / 当月残額
+            { width: 14 }, // 当月残額
+            { width: 40 }  // メモ
         ];
+        worksheet.properties.defaultRowHeight = 18;
+        worksheet.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
 
-        const applyBorder = (cell, variant = 'thin') => {
-            cell.border = ['top', 'left', 'bottom', 'right'].reduce((border, side) => {
-                border[side] = { style: variant, color: { argb: 'FFB0B0B0' } };
-                return border;
-            }, {});
+        const THEME = {
+            colors: {
+                primary: 'FF1E3A8A',
+                primarySoft: 'FFDBEAFE',
+                headerBg: 'FFF8FAFF',
+                border: 'FFD1D5DB',
+                sectionHeaderBg: 'FFEFF6FF',
+                monthColBg: 'FFF1F5F9',
+                monthStartBg: 'FFE0E7FF',
+                incomeBg: 'FFECFDF3',
+                expenseBg: 'FFFFF1F2',
+                balanceBg: 'FFF8FAFC',
+                memoBg: 'FFFFFBEB',
+                totalBg: 'FFF3F4F6',
+                grandTotalBg: 'FFEBF5FF'
+            },
+            fonts: {
+                base: { name: 'Yu Gothic UI', size: 11, color: { argb: 'FF111827' } },
+                title: { name: 'Yu Gothic UI', bold: true, size: 18, color: { argb: 'FF1E3A8A' } },
+                subtitle: { name: 'Yu Gothic UI', size: 11, color: { argb: 'FF6B7280' } },
+                section: { name: 'Yu Gothic UI', bold: true, size: 13, color: { argb: 'FF1E3A8A' } },
+                sectionLabel: { name: 'Yu Gothic UI', bold: true, size: 11, color: { argb: 'FF1F2937' } },
+                tableHeader: { name: 'Yu Gothic UI', bold: true, size: 11, color: { argb: 'FFFFFFFF' } }
+            }
         };
 
+        const solidFill = (argb) => ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+
+        const STYLES = {
+            title: {
+                height: 28,
+                font: THEME.fonts.title,
+                fill: solidFill(THEME.colors.headerBg),
+                alignment: { horizontal: 'center', vertical: 'middle' },
+                borderVariant: 'thin'
+            },
+            subtitle: {
+                height: 18,
+                font: THEME.fonts.subtitle,
+                fill: solidFill(THEME.colors.headerBg),
+                alignment: { horizontal: 'center', vertical: 'middle' },
+                borderVariant: 'thin'
+            },
+            yearHeader: {
+                height: 22,
+                font: THEME.fonts.section,
+                fill: solidFill(THEME.colors.primarySoft),
+                alignment: { horizontal: 'left', vertical: 'middle', indent: 1 },
+                borderVariant: 'thin'
+            },
+            sectionHeader: {
+                height: 20,
+                font: THEME.fonts.sectionLabel,
+                fill: solidFill(THEME.colors.sectionHeaderBg),
+                alignment: { horizontal: 'left', vertical: 'middle', indent: 1 },
+                borderVariant: 'thin'
+            }
+        };
+
+        const makeBorder = (variant = 'thin') => ({
+            top: { style: variant, color: { argb: THEME.colors.border } },
+            left: { style: variant, color: { argb: THEME.colors.border } },
+            bottom: { style: variant, color: { argb: THEME.colors.border } },
+            right: { style: variant, color: { argb: THEME.colors.border } }
+        });
+
+        const styleRowRange = (rowNumber, fromCol, toCol, style) => {
+            const row = worksheet.getRow(rowNumber);
+            if (style.height) row.height = style.height;
+            for (let col = fromCol; col <= toCol; col++) {
+                const cell = row.getCell(col);
+                if (style.font) cell.font = style.font;
+                if (style.fill) cell.fill = style.fill;
+                if (style.alignment) cell.alignment = style.alignment;
+                if (style.border) cell.border = style.border;
+                if (style.borderVariant) cell.border = makeBorder(style.borderVariant);
+            }
+        };
+
+        const styleTableHeader = (rowNumber, colCount) => {
+            const row = worksheet.getRow(rowNumber);
+            row.height = 20;
+            for (let col = 1; col <= colCount; col++) {
+                const cell = row.getCell(col);
+                cell.font = THEME.fonts.tableHeader;
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: THEME.colors.primary } };
+                cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+                cell.border = makeBorder('thin');
+            }
+        };
+
+        const applyThinBorders = (fromRow, toRow, fromCol, toCol) => {
+            for (let r = fromRow; r <= toRow; r++) {
+                const row = worksheet.getRow(r);
+                for (let c = fromCol; c <= toCol; c++) {
+                    const cell = row.getCell(c);
+                    cell.border = makeBorder('thin');
+                    cell.font = cell.font || THEME.fonts.base;
+                }
+            }
+        };
+
+        const applyOuterBorder = (fromRow, toRow, fromCol, toCol, variant = 'medium') => {
+            const setSide = (cell, side) => {
+                const border = cell.border ? { ...cell.border } : {};
+                border[side] = { style: variant, color: { argb: THEME.colors.border } };
+                cell.border = border;
+            };
+
+            for (let c = fromCol; c <= toCol; c++) {
+                setSide(worksheet.getRow(fromRow).getCell(c), 'top');
+                setSide(worksheet.getRow(toRow).getCell(c), 'bottom');
+            }
+            for (let r = fromRow; r <= toRow; r++) {
+                setSide(worksheet.getRow(r).getCell(fromCol), 'left');
+                setSide(worksheet.getRow(r).getCell(toCol), 'right');
+            }
+        };
+
+        const applyBorder = (cell, variant = 'thin') => {
+            cell.border = makeBorder(variant);
+        };
+
+        const MONEY_FMT = '"¥"#,##0;[Red]-"¥"#,##0;0';
         const formatMoney = (row, indices = [3, 5, 6, 7]) => {
             indices.forEach(idx => {
                 const cell = row.getCell(idx);
-                cell.numFmt = '"¥"#,##0';
-                cell.alignment = { horizontal: 'right' };
+                cell.alignment = { horizontal: 'right', vertical: 'middle' };
+                if (typeof cell.value !== 'number') return;
+                cell.numFmt = MONEY_FMT;
             });
         };
 
         const exportOwnerName = (state.userName && state.userName.trim()) ? state.userName.trim() : '名前未設定';
-        const workbookTitle = `${exportOwnerName} さんの収支ブック`;
+        const workbookTitle = `${exportOwnerName}`;
         const subtitle = `作成: ${new Date().toLocaleString('ja-JP')}`;
 
         const titleRow = worksheet.addRow([workbookTitle]);
         worksheet.mergeCells(titleRow.number, 1, titleRow.number, 8);
-        titleRow.font = { bold: true, size: 18, color: { argb: 'FF0F3A78' } };
-        titleRow.alignment = { horizontal: 'center' };
+        styleRowRange(titleRow.number, 1, 8, STYLES.title);
 
         const subtitleRow = worksheet.addRow([subtitle]);
         worksheet.mergeCells(subtitleRow.number, 1, subtitleRow.number, 8);
-        subtitleRow.font = { size: 11, color: { argb: 'FF6B7280' } };
-        subtitleRow.alignment = { horizontal: 'center' };
-        worksheet.addRow([]);
+        styleRowRange(subtitleRow.number, 1, 8, STYLES.subtitle);
+        const spacerRow = worksheet.addRow([]);
+        spacerRow.height = 8;
 
         const toNumber = (value) => {
             const num = Number(value);
@@ -1119,6 +1415,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let grandTotalIncome = 0;
         let grandTotalExpenditure = 0;
+        let overallEndBalance = 0;
         let tableIndex = 1;
         const detailHeaders = ['月', '収入項目', '収入金額', '支出項目', '支出金額', '月次収支', '当月残額', 'メモ'];
         const summaryHeaders = ['月', '前月残額', '収入合計', '支出合計', '月次収支', '当月残額'];
@@ -1127,11 +1424,13 @@ document.addEventListener('DOMContentLoaded', function () {
             worksheet.addRow([]);
             const yearRow = worksheet.addRow([`${year.year}`]);
             worksheet.mergeCells(yearRow.number, 1, yearRow.number, 8);
-            yearRow.font = { bold: true, size: 13, color: { argb: 'FF0B5394' } };
-            yearRow.alignment = { horizontal: 'left' };
-            yearRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8F0FE' } };
-            yearRow.eachCell(cell => applyBorder(cell, 'thin'));
-            worksheet.addRow([]);
+            styleRowRange(yearRow.number, 1, 8, STYLES.yearHeader);
+            const yearSpacer = worksheet.addRow([]);
+            yearSpacer.height = 6;
+
+            const summarySectionRow = worksheet.addRow(['月次サマリー']);
+            worksheet.mergeCells(summarySectionRow.number, 1, summarySectionRow.number, 8);
+            styleRowRange(summarySectionRow.number, 1, 8, STYLES.sectionHeader);
 
             const safeYearName = `${year.year}`.replace(/[^A-Za-z0-9]/g, '_') || 'Year';
             const summaryStartRow = worksheet.lastRow.number + 1;
@@ -1160,32 +1459,51 @@ document.addEventListener('DOMContentLoaded', function () {
                 name: summaryTableName,
                 ref: `A${summaryStartRow}`,
                 headerRow: true,
-                style: { theme: 'TableStyleLight16', showRowStripes: true },
+                style: { theme: 'TableStyleLight15', showRowStripes: true },
                 columns: summaryHeaders.map(name => ({ name })),
                 rows: summaryRows
             });
+            styleTableHeader(summaryStartRow, summaryHeaders.length);
+            applyThinBorders(summaryStartRow, summaryStartRow + summaryRows.length, 1, summaryHeaders.length);
+            applyOuterBorder(summaryStartRow, summaryStartRow + summaryRows.length, 1, summaryHeaders.length);
 
             const summaryFirstDataRow = summaryStartRow + 1;
             summaryRows.forEach((_, idx) => {
                 const row = worksheet.getRow(summaryFirstDataRow + idx);
                 formatMoney(row, [2, 3, 4, 5, 6]);
-                row.getCell(1).alignment = { horizontal: 'center' };
+                row.height = 18;
+                row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+                row.getCell(2).fill = solidFill(THEME.colors.balanceBg);
+                row.getCell(3).fill = solidFill(THEME.colors.incomeBg);
+                row.getCell(4).fill = solidFill(THEME.colors.expenseBg);
+                row.getCell(5).fill = solidFill(THEME.colors.balanceBg);
+                row.getCell(6).fill = solidFill(THEME.colors.balanceBg);
             });
-            worksheet.addRow([]);
+
+            const afterSummarySpacer = worksheet.addRow([]);
+            afterSummarySpacer.height = 6;
+
+            const detailSectionRow = worksheet.addRow(['明細']);
+            worksheet.mergeCells(detailSectionRow.number, 1, detailSectionRow.number, 8);
+            styleRowRange(detailSectionRow.number, 1, 8, STYLES.sectionHeader);
 
             const tableStartRow = worksheet.lastRow.number + 1;
             const tableRows = [];
+            const rowMonthKeys = [];
             let yearIncomeTotal = 0;
             let yearExpenditureTotal = 0;
+            let yearEndBalance = 0;
 
             year.months.forEach(month => {
                 const incomeItems = month.income.length ? month.income : [{ name: 'ー', amount: 0 }];
                 const expenditureItems = month.expenditure.length ? month.expenditure : [{ name: 'ー', amount: 0 }];
                 const rowCount = Math.max(incomeItems.length, expenditureItems.length);
+                const monthLabel = month.month || '';
                 const monthIncomeTotal = toNumber(month.totalIncome || 0);
                 const monthExpenditureTotal = toNumber(month.totalExpenditure || 0);
                 const monthlyNet = toNumber(monthIncomeTotal - monthExpenditureTotal);
                 const monthFinalBalance = toNumber(month.finalBalance || 0);
+                yearEndBalance = monthFinalBalance;
                 yearIncomeTotal += monthIncomeTotal;
                 yearExpenditureTotal += monthExpenditureTotal;
 
@@ -1193,7 +1511,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const incomeItem = incomeItems[i] || {};
                     const expenditureItem = expenditureItems[i] || {};
                     tableRows.push([
-                        i === 0 ? (month.month || '') : '',
+                        i === 0 ? monthLabel : '',
                         incomeItem.name || '',
                         toNumber(incomeItem.amount),
                         expenditureItem.name || '',
@@ -1202,6 +1520,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         i === 0 ? monthFinalBalance : '',
                         i === 0 ? (month.note || '') : ''
                     ]);
+                    rowMonthKeys.push(monthLabel);
                 }
             });
 
@@ -1214,20 +1533,60 @@ document.addEventListener('DOMContentLoaded', function () {
                 name: tableName,
                 ref: `A${tableStartRow}`,
                 headerRow: true,
-                style: { theme: 'TableStyleMedium6', showRowStripes: true, showFirstColumn: false, showLastColumn: false },
+                style: { theme: 'TableStyleLight11', showRowStripes: true, showFirstColumn: false, showLastColumn: false },
                 columns: detailHeaders.map(name => ({ name })),
                 rows: tableRows
             });
+            styleTableHeader(tableStartRow, detailHeaders.length);
+            applyThinBorders(tableStartRow, tableStartRow + tableRows.length, 1, detailHeaders.length);
+            applyOuterBorder(tableStartRow, tableStartRow + tableRows.length, 1, detailHeaders.length);
 
             const firstDataRow = tableStartRow + 1;
             tableRows.forEach((_, idx) => {
                 const row = worksheet.getRow(firstDataRow + idx);
                 formatMoney(row);
-                row.getCell(1).alignment = { vertical: 'middle', horizontal: 'center' };
+                row.height = 18;
+
+                const monthKey = rowMonthKeys[idx] || '';
+                const prevMonthKey = idx > 0 ? (rowMonthKeys[idx - 1] || '') : '';
+                const nextMonthKey = idx < rowMonthKeys.length - 1 ? (rowMonthKeys[idx + 1] || '') : '';
+                const isMonthStart = idx === 0 || monthKey !== prevMonthKey;
+                const isMonthEnd = idx === rowMonthKeys.length - 1 || monthKey !== nextMonthKey;
+
+                const monthCell = row.getCell(1);
+                monthCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                monthCell.font = { ...THEME.fonts.base, bold: true };
+                monthCell.fill = solidFill(isMonthStart ? THEME.colors.monthStartBg : THEME.colors.monthColBg);
+
+                const monthRightBorder = monthCell.border ? { ...monthCell.border } : {};
+                monthRightBorder.right = { style: 'medium', color: { argb: THEME.colors.border } };
+                monthCell.border = monthRightBorder;
+
                 row.getCell(2).alignment = { horizontal: 'left' };
                 row.getCell(4).alignment = { horizontal: 'left' };
-                row.getCell(8).alignment = { horizontal: 'left', wrapText: true };
+                row.getCell(8).alignment = { horizontal: 'left', vertical: 'top', wrapText: true };
+
+                row.getCell(2).fill = solidFill(THEME.colors.incomeBg);
+                row.getCell(3).fill = solidFill(THEME.colors.incomeBg);
+                row.getCell(4).fill = solidFill(THEME.colors.expenseBg);
+                row.getCell(5).fill = solidFill(THEME.colors.expenseBg);
+                row.getCell(6).fill = solidFill(THEME.colors.balanceBg);
+                row.getCell(7).fill = solidFill(THEME.colors.balanceBg);
+                row.getCell(8).fill = solidFill(THEME.colors.memoBg);
+
+                if (isMonthStart || isMonthEnd) {
+                    for (let c = 1; c <= 8; c++) {
+                        const cell = row.getCell(c);
+                        const border = cell.border ? { ...cell.border } : {};
+                        if (isMonthStart) border.top = { style: 'medium', color: { argb: THEME.colors.border } };
+                        if (isMonthEnd) border.bottom = { style: 'medium', color: { argb: THEME.colors.border } };
+                        cell.border = border;
+                    }
+                }
             });
+
+            const beforeYearTotalSpacer = worksheet.addRow([]);
+            beforeYearTotalSpacer.height = 6;
 
             const yearTotalRow = worksheet.addRow([
                 '',
@@ -1236,17 +1595,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 '',
                 yearExpenditureTotal,
                 toNumber(yearIncomeTotal - yearExpenditureTotal),
-                '',
+                yearEndBalance,
                 ''
             ]);
-            yearTotalRow.font = { bold: true };
+            yearTotalRow.height = 20;
+            yearTotalRow.font = {
+                name: THEME.fonts.base.name,
+                size: THEME.fonts.base.size,
+                color: THEME.fonts.base.color,
+                bold: true
+            };
             formatMoney(yearTotalRow);
-            yearTotalRow.eachCell(cell => applyBorder(cell, 'medium'));
-            yearTotalRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } };
+            yearTotalRow.eachCell(cell => {
+                applyBorder(cell, 'medium');
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: THEME.colors.totalBg } };
+            });
             worksheet.addRow([]);
 
             grandTotalIncome += yearIncomeTotal;
             grandTotalExpenditure += yearExpenditureTotal;
+            overallEndBalance = yearEndBalance;
         });
 
         const summaryRow = worksheet.addRow([
@@ -1256,13 +1624,21 @@ document.addEventListener('DOMContentLoaded', function () {
             '',
             grandTotalExpenditure,
             toNumber(grandTotalIncome - grandTotalExpenditure),
-            '',
+            overallEndBalance,
             ''
         ]);
-        summaryRow.font = { bold: true, size: 12 };
+        summaryRow.height = 20;
+        summaryRow.font = {
+            name: THEME.fonts.base.name,
+            size: 12,
+            color: THEME.fonts.base.color,
+            bold: true
+        };
         formatMoney(summaryRow);
-        summaryRow.eachCell(cell => applyBorder(cell, 'medium'));
-        summaryRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEBF5FF' } };
+        summaryRow.eachCell(cell => {
+            applyBorder(cell, 'medium');
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: THEME.colors.grandTotalBg } };
+        });
 
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -1518,12 +1894,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         income: income.map(item => ({
                             id: item?.id ? String(item.id) : `inc_${Date.now()}_${Math.random()}`,
                             name: sanitizeText(item?.name || ''),
-                            amount: sanitizeNumber(item?.amount || 0)
+                            amount: sanitizeNumber(item?.amount || 0),
+                            disabled: item?.disabled === true
                         })),
                         expenditure: expenditure.map(item => ({
                             id: item?.id ? String(item.id) : `exp_${Date.now()}_${Math.random()}`,
                             name: sanitizeText(item?.name || ''),
-                            amount: sanitizeNumber(item?.amount || 0)
+                            amount: sanitizeNumber(item?.amount || 0),
+                            disabled: item?.disabled === true
                         }))
                     };
                 })
@@ -1601,16 +1979,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Drag & Drop for Import ---
     appContainer.addEventListener('dragover', (e) => {
+        if (state.draggedItem) return;
         e.preventDefault();
         appContainer.classList.add('drag-over');
     });
 
     appContainer.addEventListener('dragleave', (e) => {
+        if (state.draggedItem) return;
         e.preventDefault();
         appContainer.classList.remove('drag-over');
     });
 
     appContainer.addEventListener('drop', (e) => {
+        if (state.draggedItem) return;
         e.preventDefault();
         appContainer.classList.remove('drag-over');
 
@@ -1646,6 +2027,15 @@ document.addEventListener('DOMContentLoaded', function () {
         const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\\]/g, '\\$&');
         const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
         return safeText.replace(regex, '<span class="search-highlight">$1</span>');
+    };
+
+    let initialAnimationFinished = false;
+    const finishInitialAnimation = () => {
+        if (initialAnimationFinished) return;
+        initialAnimationFinished = true;
+        setTimeout(() => {
+            document.body.classList.remove('initial-animation');
+        }, 650);
     };
 
     const render = () => {
@@ -1691,6 +2081,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (filteredData.length === 0) {
             appContainer.innerHTML += '<div class="empty-list-placeholder">データがありません。</div>';
+            finishInitialAnimation();
             return;
         }
 
@@ -1716,14 +2107,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 const incomePercent = (totalIncome + totalExpenditure) > 0 ? (totalIncome / (totalIncome + totalExpenditure)) * 100 : 0;
 
                 const incomeItems = month.income.length > 0 ? month.income.map(item => `
-                    <li data-year-id="${year.id}" data-month-id="${month.id}" data-item-id="${item.id}" data-type="income">
-                        <span>${highlightSearchTerm(item.name, searchTerm)}</span><span>${formatter.format(item.amount)}</span>
+                    <li class="draggable-item ${item.disabled ? 'item-disabled' : ''}" draggable="${state.isEditMode}" data-year-id="${year.id}" data-month-id="${month.id}" data-item-id="${item.id}" data-type="income">
+                        ${state.isEditMode ? `<input type="checkbox" class="item-disabled-toggle" title="この項目を無効にする" aria-label="この収入項目を無効にする" ${item.disabled ? 'checked' : ''} data-year-id="${year.id}" data-month-id="${month.id}" data-item-id="${item.id}" data-type="income">` : ''}
+                        <span class="item-name">${highlightSearchTerm(item.name, searchTerm)}</span><span class="item-amount">${formatter.format(item.amount)}</span>
                         <div class="edit-controls"><button class="control-btn edit-btn">${icons.edit}</button><button class="control-btn delete-btn">${icons.delete}</button></div>
                     </li>`).join('') : '<div class="empty-list-placeholder">収入データがありません</div>';
 
                 const expenditureItems = month.expenditure.length > 0 ? month.expenditure.map(item => `
-                     <li data-year-id="${year.id}" data-month-id="${month.id}" data-item-id="${item.id}" data-type="expenditure">
-                        <span>${highlightSearchTerm(item.name, searchTerm)}</span><span>${formatter.format(item.amount)}</span>
+                     <li class="draggable-item ${item.disabled ? 'item-disabled' : ''}" draggable="${state.isEditMode}" data-year-id="${year.id}" data-month-id="${month.id}" data-item-id="${item.id}" data-type="expenditure">
+                        ${state.isEditMode ? `<input type="checkbox" class="item-disabled-toggle" title="この項目を無効にする" aria-label="この支出項目を無効にする" ${item.disabled ? 'checked' : ''} data-year-id="${year.id}" data-month-id="${month.id}" data-item-id="${item.id}" data-type="expenditure">` : ''}
+                        <span class="item-name">${highlightSearchTerm(item.name, searchTerm)}</span><span class="item-amount">${formatter.format(item.amount)}</span>
                         <div class="edit-controls"><button class="control-btn edit-btn">${icons.edit}</button><button class="control-btn delete-btn">${icons.delete}</button></div>
                     </li>`).join('') : '<div class="empty-list-placeholder">支出データがありません</div>';
 
@@ -1748,8 +2141,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             <div class="notes-content" style="display: ${state.isEditMode ? 'none' : 'block'};">${highlightSearchTerm(month.note || '-', searchTerm)}</div>
                             <textarea class="notes-editor" style="display: ${state.isEditMode ? 'block' : 'none'};" data-year-id="${year.id}" data-month-id="${month.id}">${month.note}</textarea>
                         </div>
-                        <div class="income-section"><h4>収入 <div class="edit-controls"><button class="control-btn add-btn" data-year-id="${year.id}" data-month-id="${month.id}" data-type="income">${icons.add}</button></div></h4><ul>${incomeItems}</ul></div>
-                        <div class="expenditure-section"><h4>支出 <div class="edit-controls"><button class="control-btn add-btn" data-year-id="${year.id}" data-month-id="${month.id}" data-type="expenditure">${icons.add}</button></div></h4><ul>${expenditureItems}</ul></div>
+                        <div class="income-section"><h4>収入 <div class="edit-controls"><button class="control-btn add-btn" data-year-id="${year.id}" data-month-id="${month.id}" data-type="income">${icons.add}</button></div></h4><ul class="item-drop-zone" data-year-id="${year.id}" data-month-id="${month.id}" data-type="income">${incomeItems}</ul></div>
+                        <div class="expenditure-section"><h4>支出 <div class="edit-controls"><button class="control-btn add-btn" data-year-id="${year.id}" data-month-id="${month.id}" data-type="expenditure">${icons.add}</button></div></h4><ul class="item-drop-zone" data-year-id="${year.id}" data-month-id="${month.id}" data-type="expenditure">${expenditureItems}</ul></div>
                     </div>
                     <div class="final-balance">最終残額: ${formatter.format(month.finalBalance)}</div>
                 `;
@@ -1758,15 +2151,32 @@ document.addEventListener('DOMContentLoaded', function () {
             appContainer.appendChild(yearSection);
         });
 
+        setupMonthsGridDrag();
         initTooltips();
+        finishInitialAnimation();
     };
 
     const initTooltips = () => {
-        tippy('.chart-container', {
+        document.querySelectorAll('#data-analysis-modal .chart-container').forEach(element => {
+            if (element._tippy) {
+                element._tippy.destroy();
+            }
+        });
+
+        const chartTooltipTargets = Array.from(document.querySelectorAll('.month-card .chart-container[data-year-id][data-month-id]'));
+        chartTooltipTargets.forEach(element => {
+            if (element._tippy) {
+                element._tippy.destroy();
+            }
+        });
+
+        if (chartTooltipTargets.length === 0) return;
+
+        tippy(chartTooltipTargets, {
             content: (reference) => {
                 const { yearId, monthId } = reference.dataset;
                 const month = findMonth(yearId, monthId);
-                if (!month) return 'データが見つかりません';
+                if (!month) return '';
 
                 const total = month.totalIncome + month.totalExpenditure;
                 if (total === 0) {
@@ -1782,6 +2192,57 @@ document.addEventListener('DOMContentLoaded', function () {
             theme: 'light',
         });
     };
+
+    // --- Print ---
+    let previousEditModeBeforePrint = null;
+
+    const preparePrintView = () => {
+        if (previousEditModeBeforePrint !== null) return;
+        previousEditModeBeforePrint = state.isEditMode;
+        if (!previousEditModeBeforePrint) return;
+
+        state.isEditMode = false;
+        document.body.classList.remove('edit-mode');
+
+        if (editModeToggle) {
+            editModeToggle.textContent = '編集モード';
+            editModeToggle.classList.remove('active');
+        }
+        if (userNameDisplay && userNameEdit) {
+            userNameDisplay.style.display = 'block';
+            userNameEdit.style.display = 'none';
+        }
+
+        render();
+    };
+
+    const restoreAfterPrint = () => {
+        if (previousEditModeBeforePrint) {
+            state.isEditMode = true;
+            document.body.classList.add('edit-mode');
+
+            if (editModeToggle) {
+                editModeToggle.textContent = '編集モード終了';
+                editModeToggle.classList.add('active');
+            }
+            if (userNameDisplay && userNameEdit) {
+                userNameDisplay.style.display = 'none';
+                userNameEdit.style.display = 'block';
+                userNameEdit.value = state.userName;
+            }
+
+            render();
+        }
+        previousEditModeBeforePrint = null;
+    };
+
+    const handlePrint = () => {
+        preparePrintView();
+        window.print();
+    };
+
+    window.addEventListener('beforeprint', preparePrintView);
+    window.addEventListener('afterprint', restoreAfterPrint);
 
     const rerender = () => {
         saveState();
@@ -1952,6 +2413,9 @@ document.addEventListener('DOMContentLoaded', function () {
             requirePasswordToggle.checked = state.requirePasswordOnLoad || !!state.password;
             requirePasswordToggle.disabled = !!state.password;
             requirePasswordToggleGroup.style.display = 'flex';
+            if (monthsScrollToggle) {
+                monthsScrollToggle.checked = state.monthScrollOnDesktop;
+            }
 
             showModal(settingsModal);
         });
@@ -1993,6 +2457,12 @@ document.addEventListener('DOMContentLoaded', function () {
             state.requirePasswordOnLoad = !!state.password || requirePasswordToggle.checked;
             requirePasswordToggle.disabled = !!state.password;
 
+            if (monthsScrollToggle) {
+                state.monthScrollOnDesktop = monthsScrollToggle.checked;
+                localStorage.setItem('monthScrollOnDesktop', state.monthScrollOnDesktop);
+                applyMonthScrollSetting();
+            }
+
             hideModal(settingsModal);
             rerender();
             showPopupMessage('Settings saved.');
@@ -2018,6 +2488,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (exportJsonButton) exportJsonButton.addEventListener('click', exportToJson);
     if (exportExcelButton) exportExcelButton.addEventListener('click', exportToExcel);
     if (exportWordButton) exportWordButton.addEventListener('click', exportToWord);
+    if (printButton) printButton.addEventListener('click', handlePrint);
     importJsonButton.addEventListener('click', importFromJson);
 
     searchBox.addEventListener('input', (e) => {
@@ -2049,10 +2520,114 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    appContainer.addEventListener('dragstart', e => {
+        if (!state.isEditMode) {
+            e.preventDefault();
+            return;
+        }
+
+        const draggedLi = e.target.closest('li.draggable-item');
+        if (!draggedLi || e.target.closest('button, input')) {
+            e.preventDefault();
+            return;
+        }
+
+        state.draggedItem = {
+            yearId: draggedLi.dataset.yearId,
+            monthId: draggedLi.dataset.monthId,
+            type: draggedLi.dataset.type,
+            itemId: draggedLi.dataset.itemId
+        };
+
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', JSON.stringify(state.draggedItem));
+        draggedLi.classList.add('is-dragging');
+    });
+
+    appContainer.addEventListener('dragover', e => {
+        if (!state.isEditMode || !state.draggedItem) return;
+
+        autoScrollMonthsGridForItemDrag(e);
+
+        const dropZone = e.target.closest('.item-drop-zone');
+        if (!dropZone) return;
+
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+
+        appContainer.querySelectorAll('.item-drag-over').forEach(element => {
+            if (element !== dropZone) element.classList.remove('item-drag-over');
+        });
+        dropZone.classList.add('item-drag-over');
+
+        const targetLi = e.target.closest('li.draggable-item');
+        appContainer.querySelectorAll('.drop-before, .drop-after').forEach(element => {
+            if (element !== targetLi) element.classList.remove('drop-before', 'drop-after');
+        });
+
+        if (!targetLi || targetLi.closest('.item-drop-zone') !== dropZone) return;
+
+        const rect = targetLi.getBoundingClientRect();
+        const insertAfter = e.clientY > rect.top + (rect.height / 2);
+        targetLi.classList.toggle('drop-before', !insertAfter);
+        targetLi.classList.toggle('drop-after', insertAfter);
+    });
+
+    appContainer.addEventListener('dragleave', e => {
+        const dropZone = e.target.closest('.item-drop-zone');
+        if (dropZone && !dropZone.contains(e.relatedTarget)) {
+            dropZone.classList.remove('item-drag-over');
+        }
+    });
+
+    appContainer.addEventListener('drop', e => {
+        if (!state.isEditMode || !state.draggedItem) return;
+
+        const dropZone = e.target.closest('.item-drop-zone');
+        if (!dropZone) return;
+
+        e.preventDefault();
+
+        const targetLi = e.target.closest('li.draggable-item');
+        const siblings = Array.from(dropZone.querySelectorAll('li.draggable-item'));
+        let targetIndex = siblings.length;
+
+        if (targetLi && targetLi.closest('.item-drop-zone') === dropZone) {
+            const targetLiIndex = siblings.indexOf(targetLi);
+            const rect = targetLi.getBoundingClientRect();
+            const insertAfter = e.clientY > rect.top + (rect.height / 2);
+            targetIndex = targetLiIndex + (insertAfter ? 1 : 0);
+        }
+
+        const moved = handleMoveItem(state.draggedItem, {
+            yearId: dropZone.dataset.yearId,
+            monthId: dropZone.dataset.monthId,
+            type: dropZone.dataset.type,
+            index: targetIndex
+        });
+
+        state.draggedItem = null;
+        appContainer.querySelectorAll('.item-drag-over, .drop-before, .drop-after, .is-dragging').forEach(element => {
+            element.classList.remove('item-drag-over', 'drop-before', 'drop-after', 'is-dragging');
+        });
+
+        if (moved) rerender();
+    });
+
+    appContainer.addEventListener('dragend', () => {
+        state.draggedItem = null;
+        appContainer.querySelectorAll('.item-drag-over, .drop-before, .drop-after, .is-dragging').forEach(element => {
+            element.classList.remove('item-drag-over', 'drop-before', 'drop-after', 'is-dragging');
+        });
+    });
+
     appContainer.addEventListener('change', e => {
         if (!state.isEditMode) return;
 
-        if (e.target.classList.contains('notes-editor')) {
+        if (e.target.classList.contains('item-disabled-toggle')) {
+            const { yearId, monthId, type, itemId } = e.target.dataset;
+            handleItemDisabledToggle(yearId, monthId, type, itemId, e.target.checked);
+        } else if (e.target.classList.contains('notes-editor')) {
             const { yearId, monthId } = e.target.dataset;
             handleNoteUpdate(yearId, monthId, e.target.value);
         } else if (e.target.classList.contains('year-title-editor')) {
@@ -2099,7 +2674,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const item = month[type].find(i => i.id === itemId);
             item.name = name; item.amount = amount;
         } else {
-            month[type].push({ id: `item_${Date.now()}`, name, amount });
+            month[type].push({ id: `item_${Date.now()}`, name, amount, disabled: false });
         }
         hideModal(modal);
         rerender();
@@ -2704,6 +3279,15 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('trend-chart-container').style.display = tabType === 'trend' ? 'block' : 'none';
             document.getElementById('comparison-chart-container').style.display = tabType === 'comparison' ? 'block' : 'none';
             document.getElementById('breakdown-chart-container').style.display = tabType === 'breakdown' ? 'block' : 'none';
+
+            requestAnimationFrame(() => {
+                if (tabType === 'trend' && trendChart) trendChart.resize();
+                if (tabType === 'comparison' && comparisonChart) comparisonChart.resize();
+                if (tabType === 'breakdown') {
+                    if (incomeBreakdownChart) incomeBreakdownChart.resize();
+                    if (expenditureBreakdownChart) expenditureBreakdownChart.resize();
+                }
+            });
         });
     });
 
@@ -2738,6 +3322,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function aggregateByCategory(items) {
         const categories = {};
         items.forEach(item => {
+            if (!isItemEnabled(item)) return;
             if (!categories[item.name]) {
                 categories[item.name] = 0;
             }
@@ -2797,6 +3382,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     title: { display: true, text: '月別収支推移' }
                 },
                 scales: {
+                    x: {
+                        ticks: {
+                            autoSkip: true,
+                            maxTicksLimit: 16,
+                            maxRotation: 0,
+                            minRotation: 0,
+                            callback: function (_value, index) {
+                                const m = monthlyData[index];
+                                if (!m) return '';
+                                const year = (m.label || '').split(' ')[0] || '';
+                                const month = m.shortLabel || '';
+                                if (month === '1月') return [year, month];
+                                return month;
+                            }
+                        },
+                        grid: { display: false }
+                    },
                     y: {
                         beginAtZero: false,
                         ticks: {
@@ -2840,6 +3442,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     title: { display: true, text: '月別収支比較' }
                 },
                 scales: {
+                    x: {
+                        ticks: {
+                            autoSkip: true,
+                            maxTicksLimit: 16,
+                            maxRotation: 0,
+                            minRotation: 0,
+                            callback: function (_value, index) {
+                                const m = monthlyData[index];
+                                if (!m) return '';
+                                const year = (m.label || '').split(' ')[0] || '';
+                                const month = m.shortLabel || '';
+                                if (month === '1月') return [year, month];
+                                return month;
+                            }
+                        },
+                        grid: { display: false }
+                    },
                     y: {
                         beginAtZero: true,
                         ticks: {
