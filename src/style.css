@@ -4579,7 +4579,18 @@
 
         @media (max-width: 420px) {
             .header-edit-controls {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 0.28rem;
+            }
+
+            .header-edit-btn {
+                min-height: 34px;
+                padding: 0.28rem 0.16rem;
+                border-radius: 8px;
+                font-size: 0.66rem !important;
+                line-height: 1.12;
+                white-space: normal;
+                overflow-wrap: anywhere;
             }
 
             .summary-item {
@@ -4686,6 +4697,321 @@
             body.edit-mode .month-card li.draggable-item .edit-controls {
                 justify-content: flex-start;
                 margin-top: 0.15rem;
+            }
+        }
+
+        /* Mobile modal readability */
+        @media (max-width: 768px) {
+            #summary-modal .modal-content.wide,
+            #category-summary-modal .modal-content.wide,
+            #settings-modal .modal-content,
+            #data-analysis-modal .modal-content.wide {
+                width: 100%;
+                max-width: none;
+                height: min(92vh, calc(100dvh - 1.5rem));
+                max-height: calc(100dvh - 1.5rem);
+                margin: 0;
+                border-radius: 14px;
+                display: grid;
+                grid-template-rows: auto minmax(0, 1fr);
+                overflow: hidden;
+            }
+
+            #data-analysis-modal .modal-content.wide {
+                grid-template-rows: auto auto minmax(0, 1fr) auto;
+            }
+
+            #summary-modal .modal-header,
+            #category-summary-modal .modal-header,
+            #settings-modal .modal-header,
+            #data-analysis-modal .modal-header {
+                min-height: 52px;
+                padding: 0.72rem 0.85rem;
+            }
+
+            #summary-modal .modal-header h2,
+            #category-summary-modal .modal-header h2,
+            #settings-modal .modal-header h2,
+            #data-analysis-modal .modal-header h2 {
+                font-size: 0.98rem !important;
+                line-height: 1.2;
+            }
+
+            #summary-modal .close-btn,
+            #category-summary-modal .close-btn,
+            #settings-modal .close-btn,
+            #data-analysis-modal .close-btn {
+                width: 34px;
+                height: 34px;
+                border-radius: 9px;
+                font-size: 1.35rem !important;
+            }
+
+            #summary-content,
+            #category-summary-content,
+            #settings-modal .settings-scroll {
+                min-height: 0;
+                max-height: none;
+                padding: 0.85rem !important;
+                overflow-y: auto;
+                scrollbar-width: none;
+                box-sizing: border-box;
+            }
+
+            #summary-content::-webkit-scrollbar,
+            #category-summary-content::-webkit-scrollbar,
+            #settings-modal .settings-scroll::-webkit-scrollbar {
+                display: none;
+            }
+
+            .summary-year-section {
+                margin-bottom: 1rem;
+                padding: 0;
+            }
+
+            .summary-year-title {
+                margin: 0 0 0.65rem;
+                padding-bottom: 0.35rem;
+                font-size: 1rem !important;
+                border-bottom-width: 1px;
+            }
+
+            .summary-tables {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+
+            .summary-tables>div,
+            #settings-modal .settings-section {
+                min-width: 0;
+                padding: 0.75rem;
+                background: #ffffff;
+                border: 1px solid var(--border-color);
+                border-radius: 10px;
+                box-shadow: none;
+                box-sizing: border-box;
+            }
+
+            .summary-tables h4,
+            #settings-modal .settings-section h3 {
+                margin: 0 0 0.55rem;
+                padding-bottom: 0.35rem;
+                font-size: 0.88rem !important;
+                line-height: 1.25;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .summary-table {
+                min-width: 360px;
+                font-size: 0.82rem !important;
+            }
+
+            .summary-tables>div {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+            }
+
+            .summary-table th,
+            .summary-table td {
+                padding: 0.5rem 0.55rem;
+                white-space: nowrap;
+            }
+
+            .summary-table td:first-child,
+            .summary-table th:first-child {
+                min-width: 150px;
+                white-space: normal;
+                overflow-wrap: anywhere;
+            }
+
+            #settings-modal .settings-section {
+                margin: 0 0 0.75rem;
+            }
+
+            #settings-modal .settings-section+.settings-section {
+                margin-top: 0;
+                padding-top: 0.75rem;
+            }
+
+            #settings-modal .form-group {
+                margin-bottom: 0.75rem;
+            }
+
+            #settings-modal textarea,
+            #settings-modal input[type="password"] {
+                width: 100%;
+                min-width: 0;
+                min-height: 42px;
+                font-size: 0.88rem !important;
+            }
+
+            #settings-modal #category-input {
+                min-height: 150px;
+                resize: vertical;
+            }
+
+            #settings-modal .toggle-switch-group {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) auto;
+                gap: 0.75rem;
+                align-items: center;
+                padding: 0.65rem 0;
+            }
+
+            #settings-modal .toggle-switch-group>label:first-child {
+                min-width: 0;
+                line-height: 1.35;
+                overflow-wrap: anywhere;
+            }
+
+            #settings-modal .form-actions {
+                margin: 0.8rem -0.75rem -0.75rem;
+                padding: 0.75rem;
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 0.45rem;
+            }
+
+            #settings-modal .form-actions button {
+                width: 100%;
+                min-height: 40px;
+            }
+
+            #data-analysis-modal .analysis-tabs {
+                display: grid;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 0.35rem;
+                padding: 0.65rem 0.85rem;
+            }
+
+            #data-analysis-modal .analysis-tab {
+                min-height: 34px;
+                padding: 0.4rem 0.25rem;
+                font-size: 0.76rem !important;
+                border-radius: 8px;
+            }
+
+            #data-analysis-modal .analysis-content {
+                padding: 0.75rem 0.85rem;
+                overflow-y: auto;
+                scrollbar-width: none;
+            }
+
+            #data-analysis-modal .analysis-content::-webkit-scrollbar {
+                display: none;
+            }
+
+            #data-analysis-modal .analysis-content .chart-container {
+                min-height: 260px;
+                padding: 0.7rem;
+                border: 1px solid var(--border-color);
+                border-radius: 10px;
+            }
+
+            #data-analysis-modal .breakdown-charts {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+
+            #data-analysis-modal .breakdown-chart-item {
+                min-height: 240px;
+                padding: 0.65rem;
+                border: 1px solid var(--border-color);
+                border-radius: 10px;
+                background: #ffffff;
+            }
+
+            #data-analysis-modal .analysis-stats {
+                padding: 0.75rem 0.85rem;
+            }
+
+            #data-analysis-modal .analysis-stats h4 {
+                margin-bottom: 0.5rem;
+                font-size: 0.86rem !important;
+            }
+
+            #data-analysis-modal .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.45rem;
+            }
+
+            #data-analysis-modal .stat-card {
+                padding: 0.55rem;
+                border-radius: 9px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            header {
+                padding: 0.5rem;
+            }
+
+            .header-bar {
+                grid-template-columns: 38px minmax(0, 1fr);
+                gap: 0.42rem;
+            }
+
+            .sidebar-toggle-btn {
+                width: 38px;
+                height: 38px;
+            }
+
+            .header-title {
+                font-size: 0.95rem !important;
+            }
+
+            #search-box {
+                min-height: 36px;
+                font-size: 0.84rem !important;
+            }
+
+            .header-edit-controls {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 0.22rem;
+            }
+
+            .header-edit-btn {
+                min-height: 30px;
+                padding: 0.22rem 0.08rem;
+                border-radius: 7px;
+                font-size: 0.59rem !important;
+                letter-spacing: 0;
+            }
+
+            #summary-modal .modal-content.wide,
+            #category-summary-modal .modal-content.wide,
+            #settings-modal .modal-content,
+            #data-analysis-modal .modal-content.wide {
+                height: calc(100dvh - 1rem);
+                max-height: calc(100dvh - 1rem);
+                border-radius: 12px;
+            }
+
+            #summary-content,
+            #category-summary-content,
+            #settings-modal .settings-scroll,
+            #data-analysis-modal .analysis-content {
+                padding-left: 0.65rem !important;
+                padding-right: 0.65rem !important;
+            }
+
+            .summary-table {
+                min-width: 320px;
+                font-size: 0.76rem !important;
+            }
+
+            #data-analysis-modal .analysis-content .chart-container {
+                min-height: 230px;
+            }
+
+            #data-analysis-modal .stat-label {
+                font-size: 0.66rem !important;
+            }
+
+            #data-analysis-modal .stat-value {
+                font-size: 0.78rem !important;
             }
         }
 
