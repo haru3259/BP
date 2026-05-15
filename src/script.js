@@ -3548,15 +3548,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // カテゴリ別集計
     function aggregateByCategory(items) {
-        const categories = {};
+        const categories = new Map();
         items.forEach(item => {
             if (!isItemEnabled(item)) return;
-            if (!categories[item.name]) {
-                categories[item.name] = 0;
-            }
-            categories[item.name] += item.amount;
+            const name = item.name || '未分類';
+            categories.set(name, (categories.get(name) || 0) + (Number(item.amount) || 0));
         });
-        return categories;
+        return Array.from(categories.entries())
+            .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ja'));
     }
 
     // グラフを描画
@@ -3718,9 +3717,9 @@ document.addEventListener('DOMContentLoaded', function () {
         incomeBreakdownChart = new Chart(incomeBreakdownCtx, {
             type: 'doughnut',
             data: {
-                labels: Object.keys(incomeCategories),
+                labels: incomeCategories.map(([name]) => name),
                 datasets: [{
-                    data: Object.values(incomeCategories),
+                    data: incomeCategories.map(([, amount]) => amount),
                     backgroundColor: [
                         '#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#06b6d4',
                         '#ec4899', '#14b8a6', '#6366f1', '#84cc16', '#f97316'
@@ -3770,9 +3769,9 @@ document.addEventListener('DOMContentLoaded', function () {
         expenditureBreakdownChart = new Chart(expenditureBreakdownCtx, {
             type: 'doughnut',
             data: {
-                labels: Object.keys(expenditureCategories),
+                labels: expenditureCategories.map(([name]) => name),
                 datasets: [{
-                    data: Object.values(expenditureCategories),
+                    data: expenditureCategories.map(([, amount]) => amount),
                     backgroundColor: [
                         '#ef4444', '#f59e0b', '#8b5cf6', '#3b82f6', '#06b6d4',
                         '#ec4899', '#14b8a6', '#6366f1', '#84cc16', '#f97316'

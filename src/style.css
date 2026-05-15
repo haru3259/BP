@@ -67,25 +67,26 @@
         }
 
         .sidebar-toggle-btn {
-            background: linear-gradient(135deg, var(--primary-color), #3b82f6);
-            border: none;
-            border-radius: 10px;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
             padding: 0.5rem;
             cursor: pointer;
-            color: white;
+            color: var(--text-color);
             display: flex;
             align-items: center;
             justify-content: center;
             min-width: 40px;
             min-height: 40px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+            box-shadow: none;
             flex-shrink: 0;
         }
 
         .sidebar-toggle-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: var(--text-color);
         }
 
         .sidebar-toggle-btn svg {
