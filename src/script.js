@@ -538,6 +538,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const requirePasswordToggleGroup = document.getElementById('require-password-toggle-group');
     const togglePasswordVisibility = document.getElementById('toggle-password-visibility');
     const monthsScrollToggle = document.getElementById('months-scroll-toggle');
+    const printOrientationSelect = document.getElementById('print-orientation-select');
 
     // --- App State ---
     let state = {
@@ -550,7 +551,8 @@ document.addEventListener('DOMContentLoaded', function () {
         categories: [],
         password: '',
         requirePasswordOnLoad: false,
-        monthScrollOnDesktop: false
+        monthScrollOnDesktop: false,
+        printOrientation: 'landscape'
     };
 
     // --- SVG Icons ---
@@ -622,12 +624,14 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.removeItem('dataIsEncrypted');
         const storedRequirePassword = localStorage.getItem('requirePasswordOnLoad');
         const storedMonthScroll = localStorage.getItem('monthScrollOnDesktop');
+        const storedPrintOrientation = localStorage.getItem('printOrientation');
         const dataIsEncrypted = localStorage.getItem('dataIsEncrypted') === 'true';
 
         state.password = ''; // never persist password
         // If the value is stored as "false", it becomes false. Otherwise, it defaults to true.
         state.requirePasswordOnLoad = storedRequirePassword !== 'false';
         state.monthScrollOnDesktop = storedMonthScroll === 'true';
+        state.printOrientation = storedPrintOrientation === 'portrait' ? 'portrait' : 'landscape';
         applyMonthScrollSetting();
 
         const hasStoredData = !!localStorage.getItem('financialData');
@@ -769,6 +773,8 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.setItem('dataIsEncrypted', state.password ? 'true' : 'false');
         localStorage.setItem('userName', state.userName);
         localStorage.setItem('requirePasswordOnLoad', state.requirePasswordOnLoad);
+        localStorage.setItem('monthScrollOnDesktop', state.monthScrollOnDesktop);
+        localStorage.setItem('printOrientation', state.printOrientation);
         saveCategories(state.categories);
     };
 
@@ -2197,12 +2203,12 @@ document.addEventListener('DOMContentLoaded', function () {
                                 ${year.months.map(month => `
                                     <tr>
                                         <th scope="row">${escapeHTML(month.month)}</th>
-                                        <td>${formatter.format(Number(month.totalIncome) || 0)}</td>
-                                        <td>${formatter.format(Number(month.totalExpenditure) || 0)}</td>
-                                        <td>${formatter.format((Number(month.totalIncome) || 0) - (Number(month.totalExpenditure) || 0))}</td>
-                                        <td>${formatter.format(Number(month.finalBalance) || 0)}</td>
-                                        <td>${renderPrintItems(month.income || [], formatter)}</td>
-                                        <td>${renderPrintItems(month.expenditure || [], formatter)}</td>
+                                        <td data-label="収入">${formatter.format(Number(month.totalIncome) || 0)}</td>
+                                        <td data-label="支出">${formatter.format(Number(month.totalExpenditure) || 0)}</td>
+                                        <td data-label="差額">${formatter.format((Number(month.totalIncome) || 0) - (Number(month.totalExpenditure) || 0))}</td>
+                                        <td data-label="残高">${formatter.format(Number(month.finalBalance) || 0)}</td>
+                                        <td data-label="収入項目">${renderPrintItems(month.income || [], formatter)}</td>
+                                        <td data-label="支出項目">${renderPrintItems(month.expenditure || [], formatter)}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -2386,9 +2392,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Print ---
     let previousEditModeBeforePrint = null;
+    let printPageStyleElement = null;
+
+    const applyPrintOrientation = () => {
+        const orientation = state.printOrientation === 'portrait' ? 'portrait' : 'landscape';
+        document.body.classList.toggle('print-portrait', orientation === 'portrait');
+        document.body.classList.toggle('print-landscape', orientation === 'landscape');
+
+        if (!printPageStyleElement) {
+            printPageStyleElement = document.createElement('style');
+            printPageStyleElement.id = 'dynamic-print-page-style';
+            document.head.appendChild(printPageStyleElement);
+        }
+        const margin = orientation === 'portrait' ? '8mm' : '8mm';
+        printPageStyleElement.textContent = `@media print { @page { size: A4 ${orientation}; margin: ${margin}; } }`;
+    };
 
     const preparePrintView = () => {
         if (previousEditModeBeforePrint !== null) return;
+        applyPrintOrientation();
         previousEditModeBeforePrint = state.isEditMode;
         if (!previousEditModeBeforePrint) return;
 
@@ -2425,6 +2447,7 @@ document.addEventListener('DOMContentLoaded', function () {
             render();
         }
         previousEditModeBeforePrint = null;
+        document.body.classList.remove('print-portrait', 'print-landscape');
     };
 
     const handlePrint = () => {
@@ -2607,6 +2630,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (monthsScrollToggle) {
                 monthsScrollToggle.checked = state.monthScrollOnDesktop;
             }
+            if (printOrientationSelect) {
+                printOrientationSelect.value = state.printOrientation;
+            }
 
             showModal(settingsModal);
         });
@@ -2650,8 +2676,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (monthsScrollToggle) {
                 state.monthScrollOnDesktop = monthsScrollToggle.checked;
-                localStorage.setItem('monthScrollOnDesktop', state.monthScrollOnDesktop);
                 applyMonthScrollSetting();
+            }
+            if (printOrientationSelect) {
+                state.printOrientation = printOrientationSelect.value === 'portrait' ? 'portrait' : 'landscape';
             }
 
             hideModal(settingsModal);
@@ -2884,7 +2912,7 @@ document.addEventListener('DOMContentLoaded', function () {
         addYearMonthsContainer.innerHTML = months.map(month => `
             <div class="month-checkbox-item">
                 <input type="checkbox" id="bulk-add-${month}" name="selectedMonths" value="${month}" checked>
-                <label for="bulk-add-${month}">${month}月</label>
+                <label for="bulk-add-${month}">${String(month).includes('月') ? month : `${month}月`}</label>
             </div>
         `).join('');
     };
@@ -2928,6 +2956,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (selectedMethod === 'copy') {
                 // コピーモードの場合
                 copySourceContainer.style.display = 'block';
+                copySourceSelect.disabled = false;
+                copySourceSelect.required = true;
                 newMonthsContainer.style.display = 'block';
                 monthSelectionContainer.style.display = 'none';
                 // コピー元選択肢を生成
@@ -2935,6 +2965,9 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 // 新規作成モードの場合
                 copySourceContainer.style.display = 'none';
+                copySourceSelect.value = '';
+                copySourceSelect.required = false;
+                copySourceSelect.disabled = true;
                 newMonthsContainer.style.display = 'block';
                 monthSelectionContainer.style.display = 'block';
             }

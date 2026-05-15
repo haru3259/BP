@@ -5255,6 +5255,171 @@
                 font-size: 7pt !important;
             }
 
+            body.print-portrait .print-report h1 {
+                font-size: 13pt !important;
+            }
+
+            body.print-portrait .print-report-header {
+                margin-bottom: 2.5mm;
+                padding-bottom: 1.2mm;
+            }
+
+            body.print-portrait .print-summary-table {
+                margin-bottom: 2.5mm;
+            }
+
+            body.print-portrait .print-summary-table th,
+            body.print-portrait .print-summary-table td {
+                padding: 1mm 1.2mm;
+                font-size: 7.2pt !important;
+            }
+
+            body.print-portrait .print-summary-table td {
+                font-size: 8.5pt !important;
+            }
+
+            body.print-portrait .print-year-section {
+                margin-top: 2.5mm;
+                break-inside: auto;
+                page-break-inside: auto;
+            }
+
+            body.print-portrait .print-year-section:not(:first-of-type) {
+                break-before: auto;
+                page-break-before: auto;
+            }
+
+            body.print-portrait .print-year-section h2 {
+                margin-bottom: 1.2mm;
+                padding-bottom: 0.6mm;
+                font-size: 10.5pt !important;
+            }
+
+            body.print-portrait .print-month-table,
+            body.print-portrait .print-month-table thead,
+            body.print-portrait .print-month-table tbody,
+            body.print-portrait .print-month-table tr,
+            body.print-portrait .print-month-table th,
+            body.print-portrait .print-month-table td {
+                display: block;
+                width: 100%;
+            }
+
+            body.print-portrait .print-month-table thead {
+                display: none;
+            }
+
+            body.print-portrait .print-month-table tr {
+                display: grid;
+                grid-template-columns: 12mm repeat(4, minmax(0, 1fr));
+                grid-template-areas:
+                    "month income expenditure diff balance"
+                    "month incomeItems incomeItems expenditureItems expenditureItems";
+                margin-bottom: 1.6mm;
+                border: 1px solid #000;
+                break-inside: auto;
+                page-break-inside: auto;
+            }
+
+            body.print-portrait .print-month-table tbody>tr>th {
+                grid-area: month;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0.8mm 0.6mm;
+                border: 0;
+                border-right: 1px solid #000;
+                font-size: 9.2pt !important;
+                text-align: center;
+                background: transparent !important;
+                writing-mode: horizontal-tb;
+            }
+
+            body.print-portrait .print-month-table td {
+                display: grid;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto;
+                gap: 0.15mm;
+                padding: 0.7mm 1mm;
+                border: 0;
+                border-bottom: 1px solid #000;
+                text-align: right;
+                white-space: normal;
+                font-size: 7.2pt !important;
+                line-height: 1.15;
+            }
+
+            body.print-portrait .print-month-table td:nth-child(2) {
+                grid-area: income;
+                border-right: 1px solid #000;
+            }
+
+            body.print-portrait .print-month-table td:nth-child(3) {
+                grid-area: expenditure;
+                border-right: 1px solid #000;
+            }
+
+            body.print-portrait .print-month-table td:nth-child(4) {
+                grid-area: diff;
+                border-right: 1px solid #000;
+            }
+
+            body.print-portrait .print-month-table td:nth-child(5) {
+                grid-area: balance;
+            }
+
+            body.print-portrait .print-month-table td::before {
+                content: attr(data-label);
+                color: #000;
+                font-weight: 700;
+                text-align: center;
+                font-size: 6.6pt !important;
+                line-height: 1;
+            }
+
+            body.print-portrait .print-month-table td:nth-child(6),
+            body.print-portrait .print-month-table td:nth-child(7) {
+                display: block;
+                text-align: left;
+                border-bottom: 0;
+                padding: 0.9mm 1mm;
+            }
+
+            body.print-portrait .print-month-table td:nth-child(6) {
+                grid-area: incomeItems;
+                border-right: 1px solid #000;
+            }
+
+            body.print-portrait .print-month-table td:nth-child(7) {
+                grid-area: expenditureItems;
+            }
+
+            body.print-portrait .print-month-table td:nth-child(6)::before,
+            body.print-portrait .print-month-table td:nth-child(7)::before {
+                display: block;
+                margin-bottom: 0.45mm;
+                text-align: left;
+                font-size: 6.9pt !important;
+            }
+
+            body.print-portrait .print-month-table tr td:last-child {
+                border-bottom: 0;
+            }
+
+            body.print-portrait .print-item-line {
+                grid-template-columns: minmax(0, 1fr) max-content;
+                gap: 1.2mm;
+                font-size: 6.8pt !important;
+                line-height: 1.12;
+            }
+
+            body.print-portrait .print-item-list {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr);
+                column-gap: 1.4mm;
+                row-gap: 0.3mm;
+            }
+
             .total-summary-card,
             .year-section,
             .month-card {

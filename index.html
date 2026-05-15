@@ -356,7 +356,7 @@
 
                 <div id="copy-source-container" class="form-group" style="display: none;">
                     <label for="copy-source-year">コピー元の年度/年</label>
-                    <select id="copy-source-year" required>
+                    <select id="copy-source-year" disabled>
                         <option value="">コピー元を選択...</option>
                     </select>
                 </div>
@@ -456,6 +456,13 @@
                             <input type="checkbox" id="months-scroll-toggle">
                             <span class="slider round"></span>
                         </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="print-orientation-select">印刷時の向き</label>
+                        <select id="print-orientation-select">
+                            <option value="landscape">横向き</option>
+                            <option value="portrait">縦向き</option>
+                        </select>
                     </div>
                     <div class="form-actions">
                         <button type="button" id="save-settings" class="btn-primary">保存</button>
